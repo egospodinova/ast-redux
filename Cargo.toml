@@ -1,0 +1,10 @@
+[package]
+name = "ast-redux"
+version = "0.1.0"
+authors = ["Emma Gospodinova <emma.gospodinova@gmail.com>"]
+
+[lib]
+crate-type = ["dylib"]
+
+[dependencies]
+libc = "*"
