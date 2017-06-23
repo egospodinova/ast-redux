@@ -191,10 +191,16 @@ impl<'ast> Visitor<'ast> for ApiVisitor<'ast> {
     }
     fn visit_local(&mut self, l: &'ast Local) { visit::walk_local(self, l) }
     fn visit_block(&mut self, b: &'ast Block) { visit::walk_block(self, b) }
-    fn visit_stmt(&mut self, s: &'ast Stmt) { visit::walk_stmt(self, s) }
+    fn visit_stmt(&mut self, s: &'ast Stmt) {
+        let stmt = Box::new(RSNode::new(RSASTItem::Stmt(s), self.krate));
+        self.walk(stmt.as_ref());
+    }
     fn visit_arm(&mut self, a: &'ast Arm) { visit::walk_arm(self, a) }
     fn visit_pat(&mut self, p: &'ast Pat) { visit::walk_pat(self, p) }
-    fn visit_expr(&mut self, ex: &'ast Expr) { visit::walk_expr(self, ex) }
+    fn visit_expr(&mut self, ex: &'ast Expr) {
+        let expr = Box::new(RSNode::new(RSASTItem::Expr(ex), self.krate));
+        self.walk(expr.as_ref());
+    }
     fn visit_expr_post(&mut self, _ex: &'ast Expr) {
     }
     fn visit_ty(&mut self, t: &'ast Ty) {
