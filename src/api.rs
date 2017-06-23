@@ -2,7 +2,7 @@ extern crate libc;
 extern crate syntax;
 
 use std::ptr;
-use std::ffi::CStr;
+use std::ffi::{CStr, CString};
 use self::syntax::ast::*;
 use self::syntax::codemap::{CodeMap, FilePathMapping, Loc, Span};
 use self::syntax::errors::DiagnosticBuilder;
@@ -103,6 +103,14 @@ pub unsafe extern fn node_from_crate<'a>(krate: *const RSCrate) -> *const RSNode
 pub unsafe extern fn destroy_node(node: *mut RSNode) {
     if !node.is_null() {
         let node = Box::from_raw(node);
+    }
+}
+
+#[no_mangle]
+pub unsafe extern fn node_get_name(node: *const RSNode) -> *const libc::c_char {
+    match *(*node).get_ast_item() {
+        RSASTItem::Item(i) => CString::new(format!("{}", i.ident.name)).unwrap().into_raw(),
+        _ => ptr::null()
     }
 }
 
