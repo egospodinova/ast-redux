@@ -53,9 +53,18 @@ pub unsafe extern fn parse_crate(name: *mut libc::c_char, src: *mut libc::c_char
     let name = if !name.is_null() { CStr::from_ptr(name).to_str().unwrap_or("") } else { "" };
 
     if let Ok(source_str) = CStr::from_ptr(src).to_str() {
-        if let Ok(krate) = parse::parse_crate_from_source_str(name.to_owned(), source_str.to_owned(), index.get_parse_sess()) {
-            let rs_crate = Box::new(RSCrate::new(krate));
-            return Box::into_raw(rs_crate);
+        match parse::parse_crate_from_source_str(name.to_owned(), source_str.to_owned(), index.get_parse_sess()) {
+            Ok(krate) => {
+                if index.get_parse_sess().span_diagnostic.has_errors() {
+                    // TODO: expose errors
+                }
+                let rs_crate = Box::new(RSCrate::new(krate));
+                return Box::into_raw(rs_crate);
+            },
+            Err(mut diag) => {
+                // TODO: expose errors
+                diag.emit();
+            }
         }
     }
 
