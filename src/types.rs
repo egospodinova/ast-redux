@@ -1,8 +1,84 @@
 extern crate syntax;
 
 use self::syntax::ast;
-use self::syntax::codemap::{CodeMap, FilePathMapping};
+use self::syntax::codemap::{CodeMap, Span, Loc, FilePathMapping};
 use self::syntax::parse::ParseSess;
+
+#[repr(C)]
+pub enum RSNodeKind {
+    Crate,
+    StructDecl,
+    EnumDecl,
+    TraitDecl,
+    ImplDecl,
+    TypeAliasDecl,
+    FieldDecl,
+    EnumVariantDecl,
+    FunctionDecl,
+    ParmDecl,
+    VarDecl,
+    Unexposed
+}
+
+#[repr(C)]
+pub enum RSVisitResult {
+    Break,
+    Continue,
+    Recurse
+}
+
+#[repr(C)]
+pub struct RSLocation {
+    line: i32,
+    column: i32
+}
+
+#[repr(C)]
+pub struct RSRange {
+    start: RSLocation,
+    end: RSLocation
+}
+
+impl RSLocation {
+    pub fn invalid() -> RSLocation {
+        RSLocation {
+            line: -1,
+            column: -1
+        }
+    }
+
+    pub fn from_loc(loc: &Loc) -> RSLocation {
+        RSLocation {
+            line: loc.line as i32,
+            column: loc.col.0 as i32
+        }
+    }
+}
+
+impl RSRange {
+    pub fn invalid() -> RSRange {
+        RSRange {
+            start: RSLocation::invalid(),
+            end: RSLocation::invalid()
+        }
+    }
+
+    pub fn from_span(span: &Span, codemap: &CodeMap) -> RSRange {
+        RSRange {
+            start: RSLocation::from_loc(&codemap.lookup_char_pos(span.lo)),
+            end: RSLocation::from_loc(&codemap.lookup_char_pos(span.hi))
+        }
+    }
+
+    pub fn at_span_start(span: &Span, codemap: &CodeMap) -> RSRange {
+        let start = codemap.lookup_char_pos(span.lo);
+        RSRange {
+            start: RSLocation::from_loc(&start),
+            end: RSLocation::from_loc(&start)
+        }
+    }
+}
+
 
 pub struct RSNode<'a> {
     data: RSASTItem<'a>,

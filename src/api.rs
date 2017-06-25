@@ -11,59 +11,6 @@ use self::syntax::visit::{self, Visitor, FnKind};
 
 use types::*;
 
-#[repr(C)]
-pub enum RSNodeKind {
-    Crate,
-    StructDecl,
-    EnumDecl,
-    TraitDecl,
-    ImplDecl,
-    TypeAliasDecl,
-    FieldDecl,
-    EnumVariantDecl,
-    FunctionDecl,
-    ParmDecl,
-    VarDecl,
-    Unexposed
-}
-
-#[repr(C)]
-pub enum RSVisitResult {
-    Break,
-    Continue,
-    Recurse
-}
-
-#[repr(C)]
-pub struct RSLocation {
-    line: i32,
-    column: i32
-}
-
-#[repr(C)]
-pub struct RSRange {
-    start: RSLocation,
-    end: RSLocation
-}
-
-impl RSLocation {
-    fn invalid() -> RSLocation {
-        RSLocation {
-            line: -1,
-            column: -1
-        }
-    }
-}
-
-impl RSRange {
-    fn invalid() -> RSRange {
-        RSRange {
-            start: RSLocation::invalid(),
-            end: RSLocation::invalid()
-        }
-    }
-}
-
 type CallbackFn = extern fn(*const RSNode, *const RSNode, *mut libc::c_void) -> RSVisitResult;
 type ClientData = *mut libc::c_void;
 
@@ -102,7 +49,6 @@ pub unsafe extern fn parse_crate(name: *mut libc::c_char, src: *mut libc::c_char
         return ptr::null();
     }
 
-
     let index = &*index;
     let name = if !name.is_null() { CStr::from_ptr(name).to_str().unwrap_or("") } else { "" };
 
@@ -137,19 +83,38 @@ pub unsafe extern fn destroy_node(node: *mut RSNode) {
 }
 
 #[no_mangle]
-pub unsafe extern fn node_get_name(node: *const RSNode) -> *const libc::c_char {
+pub unsafe extern fn node_get_spelling_name(node: *const RSNode) -> *const libc::c_char {
     match *(*node).get_ast_item() {
         RSASTItem::Item(i) => CString::new(format!("{}", i.ident.name)).unwrap().into_raw(),
         _ => ptr::null()
     }
 }
 
-pub unsafe extern fn node_get_spelling_range(node: *const RSNode) -> RSRange {
+#[no_mangle]
+pub unsafe extern fn node_get_spelling_range(node: *const RSNode, index: *const RSIndex) -> RSRange {
+    if index.is_null() {
+        return RSRange::invalid();
+    }
+
     match *(*node).get_ast_item() {
+        RSASTItem::Item(i) => RSRange::at_span_start(&i.span, (*index).get_parse_sess().codemap()),
         _ => RSRange::invalid()
     }
 }
 
+#[no_mangle]
+pub unsafe extern fn node_get_extent(node: *const RSNode, index: *const RSIndex) -> RSRange {
+    if index.is_null() {
+        return RSRange::invalid();
+    }
+
+    match *(*node).get_ast_item() {
+        RSASTItem::Item(i) => RSRange::from_span(&i.span, (*index).get_parse_sess().codemap()),
+        _ => RSRange::invalid()
+    }
+}
+
+#[no_mangle]
 pub unsafe extern fn node_get_kind(node: *const RSNode) -> RSNodeKind {
     match *(*node).get_ast_item() {
         RSASTItem::Crate(_) => RSNodeKind::Crate,
