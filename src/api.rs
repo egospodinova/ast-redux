@@ -96,6 +96,9 @@ pub unsafe extern fn node_get_spelling_name(node: *const RSNode) -> *const libc:
     match *(*node).get_ast_item() {
         RSASTItem::Item(i) => CString::new(format!("{}", i.ident.name)).unwrap().into_raw(),
         RSASTItem::Variant(v, _, _) => CString::new(format!("{}", v.node.name)).unwrap().into_raw(),
+        RSASTItem::Field(f) => if let Some(id) = f.ident {
+            CString::new(format!("{}", id)).unwrap().into_raw()
+        } else { ptr::null() },
         _ => ptr::null()
     }
 }
@@ -110,6 +113,7 @@ pub unsafe extern fn node_get_spelling_range(node: *const RSNode, index: *const 
     match *(*node).get_ast_item() {
         RSASTItem::Item(i) => RSRange::at_span_start(&i.span, codemap),
         RSASTItem::Variant(v, _, _) => RSRange::at_span_start(&v.span, codemap),
+        RSASTItem::Field(f) => RSRange::at_span_start(&f.span, codemap),
         _ => RSRange::invalid()
     }
 }
@@ -124,6 +128,7 @@ pub unsafe extern fn node_get_extent(node: *const RSNode, index: *const RSIndex)
     match *(*node).get_ast_item() {
         RSASTItem::Item(i) => RSRange::from_span(&i.span, codemap),
         RSASTItem::Variant(v, _, _) => RSRange::from_span(&v.span, codemap),
+        RSASTItem::Field(f) => RSRange::from_span(&f.span, codemap),
         _ => RSRange::invalid()
     }
 }
@@ -148,6 +153,7 @@ pub unsafe extern fn node_get_kind(node: *const RSNode) -> RSNodeKind {
         },
         RSASTItem::Expr(_) => RSNodeKind::Unexposed,
         RSASTItem::Variant(v, _, _) => RSNodeKind::EnumVariantDecl,
+        RSASTItem::Field(f) => RSNodeKind::FieldDecl,
         _       => RSNodeKind::Unexposed
     }
 }
@@ -192,7 +198,8 @@ impl<'ast> ApiVisitor<'ast> {
                     &RSASTItem::Item(i) => visit::walk_item(self, i),
                     &RSASTItem::Stmt(s) => visit::walk_stmt(self, s),
                     &RSASTItem::Expr(e) => visit::walk_expr(self, e),
-                    &RSASTItem::Variant(v, g, id) => visit::walk_variant(self, v, g, id)
+                    &RSASTItem::Variant(v, g, id) => visit::walk_variant(self, v, g, id),
+                    &RSASTItem::Field(f) => visit::walk_struct_field(self, f),
                 }
                 self.parents.pop().unwrap();
             }
@@ -254,7 +261,8 @@ impl<'ast> Visitor<'ast> for ApiVisitor<'ast> {
         visit::walk_struct_def(self, s)
     }
     fn visit_struct_field(&mut self, s: &'ast StructField) {
-        visit::walk_struct_field(self, s)
+        let field = Box::new(RSNode::new(RSASTItem::Field(s), self.krate));
+        self.walk(field.as_ref());
     }
     fn visit_enum_def(&mut self, enum_definition: &'ast EnumDef,
                       generics: &'ast Generics, item_id: NodeId, _: Span) {

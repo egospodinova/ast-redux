@@ -114,6 +114,7 @@ pub enum RSASTItem<'ast> {
     Stmt(&'ast ast::Stmt),
     Expr(&'ast ast::Expr),
     Variant(&'ast ast::Variant, &'ast ast::Generics, ast::NodeId),
+    Field(&'ast ast::StructField),
 }
 
 pub struct RSCrate {
