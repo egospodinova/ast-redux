@@ -169,8 +169,10 @@ impl<'ast> ApiVisitor<'ast> {
         let result = {
             if let Some(parent) = self.parents.last() {
                 (self.callback)(node, *parent, self.data)
-            } else {
+            } else if let &RSASTItem::Crate(c) = unsafe { (*node).get_ast_item() } {
                 (self.callback)(node, ptr::null(), self.data)
+            } else {
+                RSVisitResult::Recurse
             }
         };
 
