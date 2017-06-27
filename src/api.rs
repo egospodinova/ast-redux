@@ -99,6 +99,12 @@ pub unsafe extern fn node_get_spelling_name(node: *const RSNode) -> *const libc:
         RSASTItem::Field(f) => if let Some(id) = f.ident {
             CString::new(format!("{}", id)).unwrap().into_raw()
         } else { ptr::null() },
+        RSASTItem::Pat(p) => match p.node {
+            PatKind::Ident(_, id, _) => CString::new(format!("{}", id.node.name)).unwrap().into_raw(),
+            _ => ptr::null()
+        },
+        RSASTItem::TraitItem(t) => CString::new(format!("{}", t.ident.name)).unwrap().into_raw(),
+        RSASTItem::ImplItem(i) => CString::new(format!("{}", i.ident.name)).unwrap().into_raw(),
         _ => ptr::null()
     }
 }
@@ -114,6 +120,12 @@ pub unsafe extern fn node_get_spelling_range(node: *const RSNode, index: *const 
         RSASTItem::Item(i) => RSRange::at_span_start(&i.span, codemap),
         RSASTItem::Variant(v, _, _) => RSRange::at_span_start(&v.span, codemap),
         RSASTItem::Field(f) => RSRange::at_span_start(&f.span, codemap),
+        RSASTItem::Pat(p) => match p.node {
+            PatKind::Ident(_, id, _) => RSRange::from_span(&id.span, codemap),
+            _ => RSRange::invalid()
+        },
+        RSASTItem::TraitItem(t) => RSRange::at_span_start(&t.span, codemap),
+        RSASTItem::ImplItem(i) => RSRange::at_span_start(&i.span, codemap),
         _ => RSRange::invalid()
     }
 }
@@ -129,6 +141,12 @@ pub unsafe extern fn node_get_extent(node: *const RSNode, index: *const RSIndex)
         RSASTItem::Item(i) => RSRange::from_span(&i.span, codemap),
         RSASTItem::Variant(v, _, _) => RSRange::from_span(&v.span, codemap),
         RSASTItem::Field(f) => RSRange::from_span(&f.span, codemap),
+        RSASTItem::Pat(p) => match p.node {
+            PatKind::Ident(_, id, _) => RSRange::from_span(&id.span, codemap),
+            _ => RSRange::invalid()
+        },
+        RSASTItem::TraitItem(t) => RSRange::from_span(&t.span, codemap),
+        RSASTItem::ImplItem(i) => RSRange::from_span(&i.span, codemap),
         _ => RSRange::invalid()
     }
 }
@@ -147,13 +165,22 @@ pub unsafe extern fn node_get_kind(node: *const RSNode) -> RSNodeKind {
             ItemKind::Ty(..)            => RSNodeKind::TypeAliasDecl,
             _   => RSNodeKind::Unexposed
         },
-        RSASTItem::Stmt(s) => match s.node {
-            StmtKind::Local(..) => RSNodeKind::VarDecl,
-            _   => RSNodeKind::Unexposed
+        RSASTItem::Pat(p) => match p.node {
+            PatKind::Ident(..) => RSNodeKind::VarDecl,
+            _ => RSNodeKind::Unexposed
         },
+        RSASTItem::Stmt(_) => RSNodeKind::Unexposed,
         RSASTItem::Expr(_) => RSNodeKind::Unexposed,
         RSASTItem::Variant(v, _, _) => RSNodeKind::EnumVariantDecl,
         RSASTItem::Field(f) => RSNodeKind::FieldDecl,
+        RSASTItem::TraitItem(t) => match t.node {
+            TraitItemKind::Method(..) => RSNodeKind::FunctionDecl,
+            _ => RSNodeKind::Unexposed
+        },
+        RSASTItem::ImplItem(i) => match i.node {
+            ImplItemKind::Method(..) => RSNodeKind::FunctionDecl,
+            _ => RSNodeKind::Unexposed
+        },
         _       => RSNodeKind::Unexposed
     }
 }
@@ -200,6 +227,9 @@ impl<'ast> ApiVisitor<'ast> {
                     &RSASTItem::Expr(e) => visit::walk_expr(self, e),
                     &RSASTItem::Variant(v, g, id) => visit::walk_variant(self, v, g, id),
                     &RSASTItem::Field(f) => visit::walk_struct_field(self, f),
+                    &RSASTItem::Pat(p) => visit::walk_pat(self, p),
+                    &RSASTItem::TraitItem(t) => visit::walk_trait_item(self, t),
+                    &RSASTItem::ImplItem(i) => visit::walk_impl_item(self, i),
                 }
                 self.parents.pop().unwrap();
             }
@@ -230,7 +260,10 @@ impl<'ast> Visitor<'ast> for ApiVisitor<'ast> {
         self.walk(stmt.as_ref());
     }
     fn visit_arm(&mut self, a: &'ast Arm) { visit::walk_arm(self, a) }
-    fn visit_pat(&mut self, p: &'ast Pat) { visit::walk_pat(self, p) }
+    fn visit_pat(&mut self, p: &'ast Pat) {
+        let pat = Box::new(RSNode::new(RSASTItem::Pat(p), self.krate));
+        self.walk(pat.as_ref());
+    }
     fn visit_expr(&mut self, ex: &'ast Expr) {
         let expr = Box::new(RSNode::new(RSASTItem::Expr(ex), self.krate));
         self.walk(expr.as_ref());
@@ -247,8 +280,14 @@ impl<'ast> Visitor<'ast> for ApiVisitor<'ast> {
     fn visit_fn(&mut self, fk: FnKind<'ast>, fd: &'ast FnDecl, s: Span, _: NodeId) {
         visit::walk_fn(self, fk, fd, s)
     }
-    fn visit_trait_item(&mut self, ti: &'ast TraitItem) { visit::walk_trait_item(self, ti) }
-    fn visit_impl_item(&mut self, ii: &'ast ImplItem) { visit::walk_impl_item(self, ii) }
+    fn visit_trait_item(&mut self, ti: &'ast TraitItem) {
+        let trait_item = Box::new(RSNode::new(RSASTItem::TraitItem(ti), self.krate));
+        self.walk(trait_item.as_ref());
+    }
+    fn visit_impl_item(&mut self, ii: &'ast ImplItem) {
+        let impl_item = Box::new(RSNode::new(RSASTItem::ImplItem(ii), self.krate));
+        self.walk(impl_item.as_ref());
+    }
     fn visit_trait_ref(&mut self, t: &'ast TraitRef) { visit::walk_trait_ref(self, t) }
     fn visit_ty_param_bound(&mut self, bounds: &'ast TyParamBound) {
         visit::walk_ty_param_bound(self, bounds)
