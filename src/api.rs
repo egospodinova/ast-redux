@@ -7,6 +7,7 @@ use self::syntax::ast::*;
 use self::syntax::codemap::{CodeMap, FilePathMapping, Loc, Span};
 use self::syntax::errors::DiagnosticBuilder;
 use self::syntax::parse::{self, ParseSess};
+use self::syntax::print::pprust;
 use self::syntax::visit::{self, Visitor, FnKind};
 
 use types::*;
@@ -94,7 +95,10 @@ pub unsafe extern fn destroy_node(node: *mut RSNode) {
 #[no_mangle]
 pub unsafe extern fn node_get_spelling_name(node: *const RSNode) -> *const libc::c_char {
     match *(*node).get_ast_item() {
-        RSASTItem::Item(i) => CString::new(format!("{}", i.ident.name)).unwrap().into_raw(),
+        RSASTItem::Item(i) => match i.node {
+            ItemKind::Impl(_, _, _, _, _, ref ty, _) => CString::new(pprust::ty_to_string(&*ty)).unwrap().into_raw(),
+            _ => CString::new(format!("{}", i.ident.name)).unwrap().into_raw(),
+        },
         RSASTItem::Variant(v, _, _) => CString::new(format!("{}", v.node.name)).unwrap().into_raw(),
         RSASTItem::Field(f) => if let Some(id) = f.ident {
             CString::new(format!("{}", id)).unwrap().into_raw()
