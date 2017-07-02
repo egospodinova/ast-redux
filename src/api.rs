@@ -7,6 +7,8 @@ use self::syntax::ast::*;
 use self::syntax::codemap::{CodeMap, FilePathMapping, Loc, Span};
 use self::syntax::errors::DiagnosticBuilder;
 use self::syntax::parse::{self, ParseSess};
+use self::syntax::parse::parser::Parser;
+use self::syntax::parse::lexer;
 use self::syntax::print::pprust;
 use self::syntax::visit::{self, Visitor, FnKind};
 
@@ -43,6 +45,14 @@ pub unsafe extern fn destroy_index(index: *mut RSIndex) {
     }
 }
 
+fn parse_source(name: String, source: String, parse_sess: &ParseSess) -> Result<Crate, DiagnosticBuilder> {
+    let filemap = parse_sess.codemap().new_filemap(name, source);
+    let mut lexer = lexer::StringReader::new(&parse_sess, filemap);
+    lexer.real_token();
+    let stream = try!(lexer.parse_all_token_trees());
+    Parser::new(parse_sess, stream, None, false, false).parse_crate_mod()
+}
+
 #[no_mangle]
 pub unsafe extern fn parse_crate(name: *mut libc::c_char, src: *mut libc::c_char,
                                  index: *mut RSIndex) -> *const RSCrate {
@@ -54,7 +64,7 @@ pub unsafe extern fn parse_crate(name: *mut libc::c_char, src: *mut libc::c_char
     let name = if !name.is_null() { CStr::from_ptr(name).to_str().unwrap_or("") } else { "" };
 
     if let Ok(source_str) = CStr::from_ptr(src).to_str() {
-        match parse::parse_crate_from_source_str(name.to_owned(), source_str.to_owned(), index.get_parse_sess()) {
+        match parse_source(name.to_owned(), source_str.to_owned(), index.get_parse_sess()) {
             Ok(krate) => {
                 if index.get_parse_sess().span_diagnostic.has_errors() {
                     // TODO: expose errors
