@@ -1,21 +1,20 @@
-extern crate libc;
-extern crate syntax;
+mod types;
 
 use std::ptr;
 use std::ffi::{CStr, CString};
-use self::syntax::ast::*;
-use self::syntax::codemap::{CodeMap, FilePathMapping, Loc, Span};
-use self::syntax::errors::DiagnosticBuilder;
-use self::syntax::parse::{self, ParseSess};
-use self::syntax::parse::parser::Parser;
-use self::syntax::parse::lexer;
-use self::syntax::print::pprust;
-use self::syntax::visit::{self, Visitor, FnKind};
+use syntax::ast::*;
+use syntax::codemap::{CodeMap, FilePathMapping, Loc, Span};
+use syntax::errors::DiagnosticBuilder;
+use syntax::parse::{self, ParseSess};
+use syntax::parse::parser::Parser;
+use syntax::parse::lexer;
+use syntax::print::pprust;
+use syntax::visit::{self, Visitor, FnKind};
 
-use types::*;
+use api::types::*;
 
-type CallbackFn = extern fn(*const RSNode, *const RSNode, *mut libc::c_void) -> RSVisitResult;
-type ClientData = *mut libc::c_void;
+type CallbackFn = extern fn(*const RSNode, *const RSNode, *mut ::libc::c_void) -> RSVisitResult;
+type ClientData = *mut ::libc::c_void;
 
 #[no_mangle]
 pub unsafe extern fn visit_children(node: *mut RSNode, callback: CallbackFn, data: ClientData) {
@@ -54,7 +53,7 @@ fn parse_source(name: String, source: String, parse_sess: &ParseSess) -> Result<
 }
 
 #[no_mangle]
-pub unsafe extern fn parse_crate(name: *mut libc::c_char, src: *mut libc::c_char,
+pub unsafe extern fn parse_crate(name: *mut ::libc::c_char, src: *mut ::libc::c_char,
                                  index: *mut RSIndex) -> *const RSCrate {
     if index.is_null() {
         return ptr::null();
@@ -83,27 +82,13 @@ pub unsafe extern fn parse_crate(name: *mut libc::c_char, src: *mut libc::c_char
 }
 
 #[no_mangle]
-pub unsafe extern fn destroy_crate(krate: *mut RSCrate) {
-    if !krate.is_null() {
-        let krate = Box::from_raw(krate);
-    }
-}
-
-#[no_mangle]
 pub unsafe extern fn node_from_crate<'a>(krate: *const RSCrate) -> *const RSNode<'a> {
     if krate.is_null() { return ptr::null(); }
     Box::into_raw(Box::new(RSNode::from_crate(&*krate)))
 }
 
 #[no_mangle]
-pub unsafe extern fn destroy_node(node: *mut RSNode) {
-    if !node.is_null() {
-        let node = Box::from_raw(node);
-    }
-}
-
-#[no_mangle]
-pub unsafe extern fn node_get_spelling_name(node: *const RSNode) -> *const libc::c_char {
+pub unsafe extern fn node_get_spelling_name(node: *const RSNode) -> *const ::libc::c_char {
     match *(*node).get_ast_item() {
         RSASTItem::Item(i) => match i.node {
             ItemKind::Impl(_, _, _, _, _, ref ty, _) => CString::new(pprust::ty_to_string(&*ty)).unwrap().into_raw(),
@@ -196,6 +181,27 @@ pub unsafe extern fn node_get_kind(node: *const RSNode) -> RSNodeKind {
             _ => RSNodeKind::Unexposed
         },
         _       => RSNodeKind::Unexposed
+    }
+}
+
+#[no_mangle]
+pub unsafe extern fn destroy_crate(krate: *mut RSCrate) {
+    if !krate.is_null() {
+        let krate = Box::from_raw(krate);
+    }
+}
+
+#[no_mangle]
+pub unsafe extern fn destroy_node(node: *mut RSNode) {
+    if !node.is_null() {
+        let node = Box::from_raw(node);
+    }
+}
+
+#[no_mangle]
+pub unsafe extern fn destroy_string(string: *mut ::libc::c_char) {
+    if !string.is_null() {
+        CString::from_raw(string);
     }
 }
 

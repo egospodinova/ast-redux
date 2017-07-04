@@ -1,8 +1,6 @@
-extern crate syntax;
-
-use self::syntax::ast;
-use self::syntax::codemap::{CodeMap, Span, Loc, FilePathMapping};
-use self::syntax::parse::ParseSess;
+use syntax::ast;
+use syntax::codemap::{CodeMap, Span, Loc, FilePathMapping};
+use syntax::parse::ParseSess;
 
 #[repr(C)]
 pub enum RSNodeKind {
