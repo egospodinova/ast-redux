@@ -392,9 +392,9 @@ impl<'a> ASTTransformer<'a> {
     }
 
     fn transform_capture_kind(&mut self, capture_kind: &ast::CaptureBy) -> CaptureKind {
-        match capture_kind {
-            &ast::CaptureBy::Value => CaptureKind::ByValue,
-            &ast::CaptureBy::Ref => CaptureKind::ByRef
+        match *capture_kind {
+            ast::CaptureBy::Value => CaptureKind::ByValue,
+            ast::CaptureBy::Ref => CaptureKind::ByRef
         }
     }
 
