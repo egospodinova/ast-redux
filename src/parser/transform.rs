@@ -96,14 +96,14 @@ impl<'a> ASTTransformer<'a> {
     fn transform_trait_item(&mut self, item: &ast::TraitItem) -> TraitItem {
         let item_member = match &item.node {
             &ast::TraitItemKind::Const(ref ty, ref expr)
-                => ItemMember_::Const(P::new(self.transform_type(&*ty)),
+                => ItemMember::Const(P::new(self.transform_type(&*ty)),
                                       opt_map!(expr, |e| P::new(self.transform_expr(e)))),
             &ast::TraitItemKind::Method(ref sig, ref block)
-                => ItemMember_::Method(self.transform_function_sig(&*sig.decl, &sig.unsafety, &sig.constness,
+                => ItemMember::Method(self.transform_function_sig(&*sig.decl, &sig.unsafety, &sig.constness,
                                                                    &sig.abi, &sig.generics),
                                        opt_map!(block, |b| P::new(self.transform_block(b)))),
             &ast::TraitItemKind::Type(ref bounds, ref ty)
-                => ItemMember_::Type(vec_map!(bounds, |b| self.transform_bound(b)),
+                => ItemMember::Type(vec_map!(bounds, |b| self.transform_bound(b)),
                                      opt_map!(ty, |t| P::new(self.transform_type(t)))),
             _   => unimplemented!()
         };
@@ -120,14 +120,14 @@ impl<'a> ASTTransformer<'a> {
         // TODO: possibly could reduce duplication with method above
         let item_member = match &item.node {
             &ast::ImplItemKind::Const(ref ty, ref expr)
-                => ItemMember_::Const(P::new(self.transform_type(&*ty)),
+                => ItemMember::Const(P::new(self.transform_type(&*ty)),
                                       Some(P::new(self.transform_expr(expr)))),
             &ast::ImplItemKind::Method(ref sig, ref block)
-                => ItemMember_::Method(self.transform_function_sig(&*sig.decl, &sig.unsafety, &sig.constness,
+                => ItemMember::Method(self.transform_function_sig(&*sig.decl, &sig.unsafety, &sig.constness,
                                                                    &sig.abi, &sig.generics),
                                        Some(P::new(self.transform_block(block)))),
             &ast::ImplItemKind::Type(ref ty)
-                => ItemMember_::Type(vec![], Some(P::new(self.transform_type(ty)))),
+                => ItemMember::Type(vec![], Some(P::new(self.transform_type(ty)))),
             _   => unimplemented!()
         };
 

@@ -269,9 +269,9 @@ pub enum Item_ {
     Fn(FunctionSig, P<Block>)
 }
 
-pub type TraitItem = ItemLike<ItemMember_>;
-pub type ImplItem = VisibleItemLike<ItemMember_>;
-pub enum ItemMember_ {
+pub type TraitItem = ItemLike<ItemMember>;
+pub type ImplItem = VisibleItemLike<ItemMember>;
+pub enum ItemMember {
     Const(P<Type>, Option<P<Expr>>),
     Method(FunctionSig, Option<P<Block>>),
     Type(Vec<TypeParamBound>, Option<P<Type>>),
