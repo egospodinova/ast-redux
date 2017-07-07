@@ -201,7 +201,7 @@ pub enum Type_ {
     Array(P<Type>, P<Expr>),
     Slice(P<Type>),
     Ptr(P<Type>, Mutability),
-    Ref(P<Type>, Mutability, Lifetime),
+    Ref(P<Type>, Mutability, Option<Lifetime>),
     Fun(Vec<P<Type>>, P<Type>),
     Var(String)
 }
