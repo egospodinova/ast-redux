@@ -124,6 +124,7 @@ pub enum Expr_ {
     For(P<Pat>, P<Expr>, P<Block>, Option<Spanned<Identifier>>),
     Array(Vec<P<Expr>>),
     Repeat(P<Expr>, P<Expr>),
+    Struct(Path, Vec<Field>, Option<P<Expr>>),
     Tuple(Vec<P<Expr>>),
     Cast(P<Expr>, P<Type>),
     Call(P<Expr>, Vec<P<Expr>>),
@@ -138,6 +139,8 @@ pub enum Expr_ {
     Break(Option<Spanned<Identifier>>, Option<P<Expr>>),
     Continue(Option<Spanned<Identifier>>),
     Return(Option<P<Expr>>),
+    Macro(Macro),
+    Paren(P<Expr>),
     Box(P<Expr>)
 }
 
@@ -151,6 +154,10 @@ pub struct Arm {
 pub enum CaptureKind {
     ByValue,
     ByRef
+}
+
+pub struct Field {
+
 }
 
 pub type Pat = Spanned<Pat_>;
@@ -168,7 +175,7 @@ pub enum Stmt_ {
     ExpStmt(P<Expr>),
     UnitStmt(P<Expr>),
     Item(P<Item>),
-    // Macro(P<Mac>)
+    Macro(P<Macro>)
 }
 
 pub enum IntType {
@@ -277,8 +284,10 @@ pub enum ItemMember {
     Const(P<Type>, Option<P<Expr>>),
     Method(FunctionSig, Option<P<Block>>),
     Type(Vec<TypeParamBound>, Option<P<Type>>),
-    // Macro(Mac)
+    Macro(Macro)
 }
+
+pub struct Macro;
 
 pub struct Attribute;
 

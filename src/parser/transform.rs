@@ -105,6 +105,8 @@ impl<'a> ASTTransformer<'a> {
             &ast::TraitItemKind::Type(ref bounds, ref ty)
                 => ItemMember::Type(vec_map!(bounds, |b| self.transform_bound(b)),
                                      opt_map!(ty, |t| P::new(self.transform_type(t)))),
+            &ast::TraitItemKind::Macro(ref m)
+                => ItemMember::Macro(self.transform_macro(m)),
             _   => unimplemented!()
         };
 
@@ -128,6 +130,8 @@ impl<'a> ASTTransformer<'a> {
                                        Some(P::new(self.transform_block(block)))),
             &ast::ImplItemKind::Type(ref ty)
                 => ItemMember::Type(vec![], Some(P::new(self.transform_type(ty)))),
+            &ast::ImplItemKind::Macro(ref m)
+                => ItemMember::Macro(self.transform_macro(m)),
             _   => unimplemented!()
         };
 
@@ -182,6 +186,8 @@ impl<'a> ASTTransformer<'a> {
                 => Stmt_::ExpStmt(P::new(self.transform_expr(expr))),
             ast::StmtKind::Semi(ref expr)
                 => Stmt_::UnitStmt(P::new(self.transform_expr(expr))),
+            ast::StmtKind::Mac(ref mac)
+                => Stmt_::Macro(P::new(self.transform_macro(&(*mac).0))), // FIXME ew.
             _   => unimplemented!()
         };
         Stmt {
@@ -319,14 +325,18 @@ impl<'a> ASTTransformer<'a> {
                 => Expr_::Return(opt_map!(v, |e| trans_exp!(e))),
             ast::ExprKind::Repeat(ref e, ref n)
                 => Expr_::Repeat(trans_exp!(e), trans_exp!(n)),
+            ast::ExprKind::Struct(ref p, ref fs, ref e)
+                => Expr_::Struct(self.transform_path(p), vec_map!(fs, |f| self.transform_field(f)),
+                                 opt_map!(e, |expr| trans_exp!(expr))),
+            ast::ExprKind::Mac(ref m)
+                => Expr_::Macro(self.transform_macro(m)),
+            ast::ExprKind::Paren(ref e)
+                => Expr_::Paren(trans_exp!(e)),
             // not implemented:
-            //ast::ExprKind::Struct(Path, Vec<Field>, Option<P<Expr>>),
             //ast::ExprKind::InlineAsm(P<InlineAsm>),
-            //ast::ExprKind::Mac(Mac),
             //ast::ExprKind::Range(Option<P<Expr>>, Option<P<Expr>>, RangeLimits),
             //ast::ExprKind::Catch(P<Block>),
             //ast::ExprKind::Type(P<Expr>, P<Ty>),
-            //ast::ExprKind::Paren(P<Expr>),
             //ast::ExprKind::InPlace(P<Expr>, P<Expr>),
             //ast::ExprKind::Try(P<Expr>),
             _ => unimplemented!()
@@ -388,6 +398,10 @@ impl<'a> ASTTransformer<'a> {
         }
     }
 
+    fn transform_field(&mut self, field: &ast::Field) -> Field {
+        Field {}
+    }
+
     fn transform_path(&mut self, path: &ast::Path) -> Path {
         Path {
             span: self.transform_span(&path.span),
@@ -410,6 +424,10 @@ impl<'a> ASTTransformer<'a> {
 
     fn transform_attr(&mut self, attr: &ast::Attribute) -> Attribute {
         Attribute {}
+    }
+
+    fn transform_macro(&mut self, mac: &ast::Mac) -> Macro {
+        Macro {}
     }
 
     fn transform_unsafety(&mut self, unsafety: &ast::Unsafety) -> Unsafety {
