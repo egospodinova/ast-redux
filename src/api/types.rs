@@ -1,6 +1,4 @@
-use syntax::ast;
-use syntax::codemap::{CodeMap, Span, Loc, FilePathMapping};
-use syntax::parse::ParseSess;
+use types;
 
 #[repr(C)]
 pub enum RSNodeKind {
@@ -45,10 +43,10 @@ impl RSLocation {
         }
     }
 
-    pub fn from_loc(loc: &Loc) -> RSLocation {
+    pub fn from_loc(loc: &types::Location) -> RSLocation {
         RSLocation {
-            line: loc.line as i32,
-            column: loc.col.0 as i32
+            line: loc.line,
+            column: loc.column
         }
     }
 }
@@ -61,18 +59,18 @@ impl RSRange {
         }
     }
 
-    pub fn from_span(span: &Span, codemap: &CodeMap) -> RSRange {
+    pub fn from_span(span: &types::Span) -> RSRange {
         RSRange {
-            start: RSLocation::from_loc(&codemap.lookup_char_pos(span.lo)),
-            end: RSLocation::from_loc(&codemap.lookup_char_pos(span.hi))
+            start: RSLocation::from_loc(&span.start),
+            end: RSLocation::from_loc(&span.end)
         }
     }
 
-    pub fn at_span_start(span: &Span, codemap: &CodeMap) -> RSRange {
-        let start = codemap.lookup_char_pos(span.lo);
+    pub fn at_span_start(span: &types::Span) -> RSRange {
+        let start = &span.start;
         RSRange {
-            start: RSLocation::from_loc(&start),
-            end: RSLocation::from_loc(&start)
+            start: RSLocation::from_loc(start),
+            end: RSLocation::from_loc(start)
         }
     }
 }
@@ -90,6 +88,7 @@ impl<'a> RSNode<'a> {
             krate: krate
         }
     }
+
     pub fn new(data: RSASTItem<'a>, krate: &'a RSCrate) -> RSNode<'a> {
         RSNode {
             data: data,
@@ -107,46 +106,30 @@ impl<'a> RSNode<'a> {
 }
 
 pub enum RSASTItem<'ast> {
-    Crate(&'ast ast::Crate),
-    Item(&'ast ast::Item),
-    Stmt(&'ast ast::Stmt),
-    Expr(&'ast ast::Expr),
-    Variant(&'ast ast::Variant, &'ast ast::Generics, ast::NodeId),
-    Field(&'ast ast::StructField),
-    Pat(&'ast ast::Pat),
-    TraitItem(&'ast ast::TraitItem),
-    ImplItem(&'ast ast::ImplItem),
+    Crate(&'ast types::Crate),
+    Item(&'ast types::Item),
+    Stmt(&'ast types::Stmt),
+    Expr(&'ast types::Expr),
+    //Variant(&'ast types::Variant, &'ast types::Generics),
+    Field(&'ast types::StructField),
+    Pat(&'ast types::Pat),
+    TraitItem(&'ast types::TraitItem),
+    ImplItem(&'ast types::ImplItem),
 }
 
 pub struct RSCrate {
-    ast: ast::Crate,
+    ast: types::Crate,
 }
 
 impl RSCrate {
-    pub fn new(ast: ast::Crate) -> RSCrate {
+    pub fn new(ast: types::Crate) -> RSCrate {
         RSCrate {
             ast: ast,
         }
     }
 
-    pub fn get_ast(&self) -> &ast::Crate {
+    pub fn get_ast(&self) -> &types::Crate {
         &self.ast
-    }
-}
-
-pub struct RSIndex {
-    parse_sess: ParseSess
-}
-
-impl RSIndex {
-    pub fn new(parse_sess: ParseSess) -> RSIndex {
-        RSIndex {
-            parse_sess: parse_sess
-        }
-    }
-
-    pub fn get_parse_sess(&self) -> &ParseSess {
-        &self.parse_sess
     }
 }
 
