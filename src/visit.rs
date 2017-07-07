@@ -209,7 +209,7 @@ pub fn walk_item<'a, V: Visitor<'a>>(visitor: &mut V, item: &'a Item) {
         }
         /*Item_::Mac(ref mac) => visitor.visit_mac(mac),
         Item_::MacroDef(ref ts) => visitor.visit_mac_def(ts, item.id),*/
-        _ => unimplemented!()
+        _ => ()
     }
     walk_list!(visitor, visit_attribute, &item.attrs);
 }
@@ -270,7 +270,7 @@ pub fn walk_type<'a, V: Visitor<'a>>(visitor: &mut V, typ: &'a Type) {
             visitor.visit_mac(mac)
         }
         */
-        _ => unimplemented!()
+        _ => ()
     }
 }
 
@@ -322,7 +322,7 @@ pub fn walk_assoc_type_binding<'a, V: Visitor<'a>>(visitor: &mut V,
 }
 */
 pub fn walk_pat<'a, V: Visitor<'a>>(visitor: &mut V, pattern: &'a Pat) {
-    match pattern.node {
+    /*match pattern.node {
         /*Pat_::TupleStruct(ref path, ref children, _) => {
             visitor.visit_path(path, pattern.id);
             walk_list!(visitor, visit_pat, children);
@@ -365,8 +365,7 @@ pub fn walk_pat<'a, V: Visitor<'a>>(visitor: &mut V, pattern: &'a Pat) {
         }
         Pat_::Mac(ref mac) => visitor.visit_mac(mac),
         */
-        _ => unimplemented!()
-    }
+    }*/
 }
 /*
 pub fn walk_foreign_item<'a, V: Visitor<'a>>(visitor: &mut V, foreign_item: &'a ForeignItem) {
@@ -490,7 +489,7 @@ pub fn walk_item_member<'a, V: Visitor<'a>>(visitor: &mut V, item_member: &'a It
         /*ItemMember::Macro(ref mac) => {
             visitor.visit_mac(mac);
         }*/
-        _ => unimplemented!()
+        _ => ()
     }
 }
 
@@ -531,7 +530,7 @@ pub fn walk_stmt<'a, V: Visitor<'a>>(visitor: &mut V, statement: &'a Stmt) {
                 visitor.visit_attribute(attr);
             }
         }*/
-        _ => unimplemented!()
+        _ => ()
     }
 }
 
@@ -688,7 +687,7 @@ pub fn walk_expr<'a, V: Visitor<'a>>(visitor: &mut V, expression: &'a Expr) {
             visitor.visit_block(body)
         }
         */
-        _ => unimplemented!()
+        _ => ()
     }
 }
 
