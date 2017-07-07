@@ -198,7 +198,7 @@ pub enum Type_ {
     Char,
     Byte,
     Tuple(Vec<P<Type>>),
-    Array(P<Type>, u64),
+    Array(P<Type>, P<Expr>),
     Slice(P<Type>),
     Ptr(P<Type>, Mutability),
     Ref(P<Type>, Mutability, Lifetime),
