@@ -7,5 +7,6 @@ extern crate libc;
 mod api;
 mod types;
 mod parser;
+mod visit;
 
 pub use api::*;
