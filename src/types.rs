@@ -46,11 +46,13 @@ impl<T> Named for VisibleItemLike<T> {
     }
 }
 
+#[derive(Eq, PartialEq, Ord, PartialOrd, Copy, Clone, Debug)]
 pub struct Location {
     pub line: i32,
     pub column: i32
 }
 
+#[derive(Eq, PartialEq, Ord, PartialOrd, Copy, Clone, Debug)]
 pub struct Span {
     pub start: Location,
     pub end: Location
