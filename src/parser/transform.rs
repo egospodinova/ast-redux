@@ -152,7 +152,7 @@ impl<'a> ASTTransformer<'a> {
 
     fn transform_fn_decl(&mut self, decl: &ast::FnDecl) -> FnDecl {
         let ret_ty = match &decl.output {
-            &ast::FunctionRetTy::Default(ref span)   => Type { span: self.transform_span(&span), node: Type_::TTuple(vec![]) },
+            &ast::FunctionRetTy::Default(ref span)   => Type { span: self.transform_span(&span), node: Type_::Tuple(vec![]) },
             &ast::FunctionRetTy::Ty(ref ty)          => self.transform_type(&*ty)
         };
 
@@ -236,7 +236,7 @@ impl<'a> ASTTransformer<'a> {
 
     fn transform_type(&mut self, ty: &ast::Ty) -> Type {
         let transformed_ty = match ty {
-            _ => Type_::TNever
+            _ => Type_::Never
         };
         Type {
             span: self.transform_span(&ty.span),

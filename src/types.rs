@@ -190,20 +190,20 @@ pub enum FloatType {
 
 pub type Type = Spanned<Type_>;
 pub enum Type_ {
-    TNever,
-    TInt(IntType),
-    TFloat(FloatType),
-    TBool,
-    TStr,
-    TChar,
-    TByte,
-    TTuple(Vec<P<Type>>),
-    TArray(P<Type>, u64),
-    TSlice(P<Type>),
-    TPtr(P<Type>, Mutability),
-    TRef(P<Type>, Mutability, Lifetime),
-    TFun(Vec<P<Type>>, P<Type>),
-    TVar(String)
+    Never,
+    Int(IntType),
+    Float(FloatType),
+    Bool,
+    Str,
+    Char,
+    Byte,
+    Tuple(Vec<P<Type>>),
+    Array(P<Type>, u64),
+    Slice(P<Type>),
+    Ptr(P<Type>, Mutability),
+    Ref(P<Type>, Mutability, Lifetime),
+    Fun(Vec<P<Type>>, P<Type>),
+    Var(String)
 }
 
 pub struct TypeParamBound;
