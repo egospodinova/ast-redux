@@ -108,13 +108,29 @@ impl<'a> RSNode<'a> {
 pub enum RSASTItem<'ast> {
     Crate(&'ast types::Crate),
     Item(&'ast types::Item),
-    Stmt(&'ast types::Stmt),
-    Expr(&'ast types::Expr),
-    //Variant(&'ast types::Variant, &'ast types::Generics),
+    Variant(&'ast types::EnumVariant, &'ast types::Generics),
     Field(&'ast types::StructField),
     Pat(&'ast types::Pat),
     TraitItem(&'ast types::TraitItem),
     ImplItem(&'ast types::ImplItem),
+}
+
+impl<'ast> RSASTItem<'ast> {
+    pub fn span(&self) -> Option<types::Span> {
+        match *self {
+            RSASTItem::Crate(ref c)        => Some(c.span),
+            RSASTItem::Item(ref i)         => Some(i.span),
+            RSASTItem::Variant(ref v, _)   => Some(v.span),
+            RSASTItem::Field(ref f)        => Some(f.span),
+            // FIXME move this out of here:
+            RSASTItem::Pat(ref p)          => match p.node {
+                           types::Pat_::Ident(ref id, _) => Some(id.span),
+                           _ => None
+                       },
+            RSASTItem::TraitItem(ref ti)   => Some(ti.span),
+            RSASTItem::ImplItem(ref ii)    => Some(ii.span)
+        }
+    }
 }
 
 pub struct RSCrate {
