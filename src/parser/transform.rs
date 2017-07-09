@@ -199,10 +199,57 @@ impl<'a> ASTTransformer<'a> {
     }
 
     fn transform_pat(&mut self, pat: &ast::Pat) -> Pat {
-        let pat_kind = Pat_::Wildcard;
+        macro_rules! trans_pat {
+            ($e:expr) => (P::new(self.transform_pat(&*$e)))
+        }
+
+        let pat_kind = match pat.node {
+            ast::PatKind::Wild
+                => Pat_::Wildcard,
+            ast::PatKind::Ident(ref mode, ref i, ref sub) => {
+                let (capture_kind, mutability) = self.transform_binding_mode(mode);
+                let ident = Spanned {
+                    span: self.transform_span(&i.span),
+                    node: self.transform_symbol(&i.node.name)
+                };
+                Pat_::Ident(ident, capture_kind, mutability, opt_map!(sub, |p| trans_pat!(p)))
+            },
+            ast::PatKind::Struct(ref p, ref fs, ref ignored)
+                => Pat_::Struct(self.transform_path(p), vec_map!(fs, |f| self.transform_field_pat(f)), *ignored),
+            ast::PatKind::TupleStruct(ref p, ref fs, ref pos)
+                => Pat_::TupleStruct(self.transform_path(p), vec_map!(fs, |f| trans_pat!(f)), *pos),
+            ast::PatKind::Path(ref qs, ref p)
+                => Pat_::Path(self.transform_path(p)),
+            ast::PatKind::Tuple(ref ps, ref pos)
+                => Pat_::Tuple(vec_map!(ps, |p| trans_pat!(p)), *pos),
+            ast::PatKind::Box(ref p)
+                => Pat_::Box(trans_pat!(p)),
+            ast::PatKind::Ref(ref p, ref m)
+                => Pat_::Ref(trans_pat!(p), self.transform_mutability(m)),
+            ast::PatKind::Lit(ref e)
+                => Pat_::Lit(P::new(self.transform_expr(&*e))),
+            ast::PatKind::Range(ref s, ref e, ref l)
+                => Pat_::Range(P::new(self.transform_expr(&*s)), P::new(self.transform_expr(&*e)),
+                               self.transform_range_end(l)),
+            ast::PatKind::Slice(ref begin, ref mid, ref end)
+                => Pat_::Slice(vec_map!(begin, |p| trans_pat!(p)), opt_map!(mid, |p| trans_pat!(p)),
+                               vec_map!(end, |p| trans_pat!(p))),
+            ast::PatKind::Mac(ref mac)
+                => Pat_::Macro(self.transform_macro(mac)),
+            _ => unimplemented!()
+        };
         Pat {
             span: self.transform_span(&pat.span),
             node: pat_kind
+        }
+    }
+
+    fn transform_field_pat(&mut self, field_pat: &codemap::Spanned<ast::FieldPat>) -> FieldPat {
+        FieldPat {
+            ident: Some(self.transform_symbol(&field_pat.node.ident.name)),
+            span: self.transform_span(&field_pat.span),
+            attrs: self.transform_attrs(&field_pat.node.attrs),
+            node: P::new(self.transform_pat(&*field_pat.node.pat))
         }
     }
 
@@ -432,10 +479,24 @@ impl<'a> ASTTransformer<'a> {
         }
     }
 
+    fn transform_range_end(&mut self, limits: &ast::RangeEnd) -> RangeLimits {
+        match *limits {
+            ast::RangeEnd::Excluded => RangeLimits::HalfOpen,
+            ast::RangeEnd::Included => RangeLimits::Closed
+        }
+    }
+
     fn transform_range_limits(&mut self, limits: &ast::RangeLimits) -> RangeLimits {
         match *limits {
             ast::RangeLimits::HalfOpen  => RangeLimits::HalfOpen,
             ast::RangeLimits::Closed    => RangeLimits::Closed
+        }
+    }
+
+    fn transform_binding_mode(&mut self, mode: &ast::BindingMode) -> (CaptureKind, Mutability) {
+        match *mode {
+            ast::BindingMode::ByRef(ref m)      => (CaptureKind::ByRef, self.transform_mutability(m)),
+            ast::BindingMode::ByValue(ref m)    => (CaptureKind::ByValue, self.transform_mutability(m))
         }
     }
 
