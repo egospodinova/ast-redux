@@ -553,15 +553,15 @@ pub fn walk_expr<'a, V: Visitor<'a>>(visitor: &mut V, expression: &'a Expr) {
             visitor.visit_expr(element);
             visitor.visit_expr(count)
         }
-        /*Expr_::Struct(ref path, ref fields, ref optional_base) => {
+        Expr_::Struct(ref path, ref fields, ref base) => {
             visitor.visit_path(path);
             for field in fields {
                 walk_list!(visitor, visit_attribute, field.attrs.iter());
-                visitor.visit_ident(field.ident.span, field.ident.node);
-                visitor.visit_expr(&field.expr)
+                walk_opt_ident(visitor, &field.span, &field.ident);
+                visitor.visit_expr(&field.node)
             }
-            walk_list!(visitor, visit_expr, optional_base);
-        }*/
+            walk_list!(visitor, visit_expr, base);
+        }
         Expr_::Tuple(ref exprs) => {
             walk_list!(visitor, visit_expr, exprs);
         }

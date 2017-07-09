@@ -130,7 +130,7 @@ pub enum Expr_ {
     Range(Option<P<Expr>>, Option<P<Expr>>, RangeLimits),
     Array(Vec<P<Expr>>),
     Repeat(P<Expr>, P<Expr>),
-    Struct(Path, Vec<Field>, Option<P<Expr>>),
+    Struct(Path, Vec<FieldExpr>, Option<P<Expr>>),
     Tuple(Vec<P<Expr>>),
     Cast(P<Expr>, P<Type>),
     Call(P<Expr>, Vec<P<Expr>>),
@@ -161,9 +161,7 @@ pub enum CaptureKind {
     ByRef
 }
 
-pub struct Field {
-
-}
+pub type FieldExpr = ItemLike<P<Expr>>;
 
 pub type Pat = Spanned<Pat_>;
 pub enum Pat_ {

@@ -433,7 +433,7 @@ impl<'a> ASTTransformer<'a> {
             ast::ExprKind::Repeat(ref e, ref n)
                 => Expr_::Repeat(trans_exp!(e), trans_exp!(n)),
             ast::ExprKind::Struct(ref p, ref fs, ref e)
-                => Expr_::Struct(self.transform_path(p), vec_map!(fs, |f| self.transform_field(f)),
+                => Expr_::Struct(self.transform_path(p), vec_map!(fs, |f| self.transform_field_expr(f)),
                                  opt_map!(e, |expr| trans_exp!(expr))),
             ast::ExprKind::Mac(ref m)
                 => Expr_::Macro(self.transform_macro(m)),
@@ -528,8 +528,13 @@ impl<'a> ASTTransformer<'a> {
         }
     }
 
-    fn transform_field(&mut self, field: &ast::Field) -> Field {
-        Field {}
+    fn transform_field_expr(&mut self, field: &ast::Field) -> FieldExpr {
+        FieldExpr {
+            ident: Some(self.transform_symbol(&field.ident.node.name)),
+            attrs: self.transform_attrs(&field.attrs),
+            span: self.transform_span(&field.span),
+            node: P::new(self.transform_expr(&*field.expr))
+        }
     }
 
     fn transform_path(&mut self, path: &ast::Path) -> Path {
