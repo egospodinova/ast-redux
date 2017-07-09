@@ -8,7 +8,7 @@ pub struct Spanned<T> {
 }
 
 pub trait Named {
-    fn name(&self) -> &str;
+    fn name(&self) -> String;
 }
 
 pub struct ItemLike<T> {
@@ -19,11 +19,11 @@ pub struct ItemLike<T> {
 }
 
 impl<T> Named for ItemLike<T> {
-    fn name(&self) -> &str {
+    fn name(&self) -> String {
         if let Some(ref name) = self.ident {
-            &name
+            name.to_owned()
         } else {
-            "<unnamed>"
+            "<unnamed>".to_owned()
         }
     }
 }
@@ -37,11 +37,11 @@ pub struct VisibleItemLike<T> {
 }
 
 impl<T> Named for VisibleItemLike<T> {
-    fn name(&self) -> &str {
+    fn name(&self) -> String {
         if let Some(ref name) = self.ident {
-            &name
+            name.to_owned()
         } else {
-            "<unnamed>"
+            "<unnamed>".to_owned()
         }
     }
 }
