@@ -91,6 +91,14 @@ impl<'a> ASTTransformer<'a> {
             ast::ItemKind::Fn(ref decl, ref unsafety, ref constness, ref abi, ref generics, ref block)
                 => Item_::Fn(self.transform_function_sig(&*decl, unsafety, constness, abi, generics),
                              P::new(self.transform_block(block))),
+            // not implemented:
+            //ast::ItemKind::Use(P<ViewPath>),
+            //ast::ItemKind::ForeignMod(ForeignMod),
+            //ast::ItemKind::GlobalAsm(P<GlobalAsm>),
+            //ast::ItemKind::Union(VariantData, Generics),
+            //ast::ItemKind::DefaultImpl(Unsafety, TraitRef),
+            //ast::ItemKind::Mac(Mac),
+            //ast::ItemKind::MacroDef(MacroDef),
             _ => unimplemented!()
         }
     }
