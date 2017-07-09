@@ -48,24 +48,10 @@ pub unsafe extern fn node_from_crate<'a>(krate: *const RSCrate) -> *const RSNode
 
 #[no_mangle]
 pub unsafe extern fn node_get_spelling_name(node: *const RSNode) -> *const ::libc::c_char {
-    // FIXME move this out of here
-    match *(*node).get_ast_item() {
-        RSASTItem::Item(i) => match i.node {
-            //Item_::Impl(_, _, _, _, _, ref ty, _) => CString::new(pprust::ty_to_string(&*ty)).unwrap().into_raw(),
-            _ => CString::new(i.name()).unwrap().into_raw(),
-        },
-        RSASTItem::Variant(v, _) => CString::new(v.name()).unwrap().into_raw(),
-        RSASTItem::Field(f) => if let Some(ref id) = f.ident {
-            CString::new(id.clone()).unwrap().into_raw()
-        } else { ptr::null() },
-        RSASTItem::Pat(p) => match p.node {
-            Pat_::Ident(ref id, ..) => CString::new(id.node.clone()).unwrap().into_raw(),
-            _ => ptr::null()
-        },
-        RSASTItem::TraitItem(t) => CString::new(t.name()).unwrap().into_raw(),
-        RSASTItem::ImplItem(i) => CString::new(i.name()).unwrap().into_raw(),
-        RSASTItem::Path(p) => CString::new(p.name()).unwrap().into_raw(),
-        _ => ptr::null()
+    if let Some(name) = (*node).get_ast_item().name() {
+        CString::new(name).unwrap().into_raw()
+    } else {
+        ptr::null()
     }
 }
 

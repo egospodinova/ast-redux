@@ -1,4 +1,4 @@
-use types;
+use types::{self, Named};
 
 #[repr(C)]
 pub enum RSNodeKind {
@@ -118,6 +118,25 @@ pub enum RSASTItem<'ast> {
 }
 
 impl<'ast> RSASTItem<'ast> {
+    pub fn name(&self) -> Option<types::Identifier> {
+        use types::Pat_;
+        match *self {
+            RSASTItem::Item(i)          => Some(i.name()),
+            RSASTItem::Variant(v, _)    => Some(v.name()),
+            RSASTItem::Field(f) => match f.ident {
+                Some(ref id)            => Some(id.clone()),
+                _                       => None
+            },
+            RSASTItem::Pat(p) => match p.node {
+                Pat_::Ident(ref id, ..) => Some(id.node.clone()),
+                _                       => None
+            },
+            RSASTItem::TraitItem(t)     => Some(t.name()),
+            RSASTItem::ImplItem(i)      => Some(i.name()),
+            RSASTItem::Path(p)          => Some(p.name()),
+            _ => None
+        }
+    }
     pub fn span(&self) -> Option<types::Span> {
         match *self {
             RSASTItem::Crate(ref c)         => Some(c.span),
