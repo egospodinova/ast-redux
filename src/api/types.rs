@@ -124,9 +124,9 @@ impl<'ast> RSASTItem<'ast> {
             RSASTItem::Field(ref f)        => Some(f.span),
             // FIXME move this out of here:
             RSASTItem::Pat(ref p)          => match p.node {
-                           types::Pat_::Ident(ref id, _) => Some(id.span),
-                           _ => None
-                       },
+                types::Pat_::Ident(ref id, ..) => Some(id.span),
+                _ => None
+            },
             RSASTItem::TraitItem(ref ti)   => Some(ti.span),
             RSASTItem::ImplItem(ref ii)    => Some(ii.span)
         }

@@ -168,9 +168,20 @@ pub struct Field {
 pub type Pat = Spanned<Pat_>;
 pub enum Pat_ {
     Wildcard,
-    Ident(Spanned<Identifier>, Option<P<Pat>>),
-    Lit(P<Expr>)
+    Ident(Spanned<Identifier>, CaptureKind, Mutability, Option<P<Pat>>),
+    Lit(P<Expr>),
+    Struct(Path, Vec<FieldPat>, bool),
+    TupleStruct(Path, Vec<P<Pat>>, Option<usize>),
+    Path(Path),
+    Tuple(Vec<P<Pat>>, Option<usize>),
+    Box(P<Pat>),
+    Ref(P<Pat>, Mutability),
+    Range(P<Expr>, P<Expr>, RangeLimits),
+    Slice(Vec<P<Pat>>, Option<P<Pat>>, Vec<P<Pat>>),
+    Macro(Macro)
 }
+
+pub type FieldPat = ItemLike<P<Pat>>;
 
 pub type Block = Spanned<Vec<Stmt>>;
 

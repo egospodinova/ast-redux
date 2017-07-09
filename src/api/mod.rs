@@ -59,7 +59,7 @@ pub unsafe extern fn node_get_spelling_name(node: *const RSNode) -> *const ::lib
             CString::new(id.clone()).unwrap().into_raw()
         } else { ptr::null() },
         RSASTItem::Pat(p) => match p.node {
-            Pat_::Ident(ref id, _) => CString::new(id.node.clone()).unwrap().into_raw(),
+            Pat_::Ident(ref id, ..) => CString::new(id.node.clone()).unwrap().into_raw(),
             _ => ptr::null()
         },
         RSASTItem::TraitItem(t) => CString::new(t.name()).unwrap().into_raw(),
