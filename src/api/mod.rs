@@ -101,7 +101,7 @@ pub unsafe extern fn node_get_kind(node: *const RSNode) -> RSNodeKind {
             ItemMember::Method(..) => RSNodeKind::FunctionDecl,
             _ => RSNodeKind::Unexposed
         },
-        RSASTItem::Path(..) => RSNodeKind::PathUse,
+        RSASTItem::Path(..) => RSNodeKind::Path,
         _=> RSNodeKind::Unexposed
     }
 }

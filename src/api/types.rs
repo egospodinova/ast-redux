@@ -13,7 +13,7 @@ pub enum RSNodeKind {
     FunctionDecl,
     ParmDecl,
     VarDecl,
-    PathUse,
+    Path,
     Unexposed
 }
 
