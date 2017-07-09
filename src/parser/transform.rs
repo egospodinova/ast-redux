@@ -17,14 +17,16 @@ macro_rules! vec_map {
 
 pub struct ASTTransformer<'a> {
     should_skip_function_bodies: bool,
-    codemap: &'a CodeMap
+    codemap: &'a CodeMap,
+    type_var_counter: u32
 }
 
 impl<'a> ASTTransformer<'a> {
     pub fn new(should_skip_function_bodies: bool, codemap: &'a CodeMap) -> ASTTransformer<'a> {
         ASTTransformer {
             should_skip_function_bodies: should_skip_function_bodies,
-            codemap: codemap
+            codemap: codemap,
+            type_var_counter: 0
         }
     }
 
@@ -228,6 +230,14 @@ impl<'a> ASTTransformer<'a> {
         }
     }
 
+    fn transform_lifetime_defs(&mut self, lifetime_defs: &[ast::LifetimeDef]) -> Generics {
+        Generics {}
+    }
+
+    fn transform_lifetime(&mut self, lifetime: &ast::Lifetime) -> Lifetime {
+        Lifetime {}
+    }
+
     fn transform_generics(&mut self, generics: &ast::Generics) -> Generics {
         Generics {}
     }
@@ -241,12 +251,49 @@ impl<'a> ASTTransformer<'a> {
     }
 
     fn transform_type(&mut self, ty: &ast::Ty) -> Type {
-        let transformed_ty = match ty {
-            _ => Type_::Never
+        macro_rules! trans_ty {
+            ($e:expr) => (P::new(self.transform_type(&*$e)))
+        }
+
+        if let ast::TyKind::Paren(ref typ) = ty.node {
+            return self.transform_type(typ);
+        }
+
+        let transformed_ty = match ty.node {
+            ast::TyKind::Never                  => Type_::Never,
+            ast::TyKind::Slice(ref typ)         => Type_::Slice(trans_ty!(typ)),
+            ast::TyKind::Array(ref typ, ref e)  => Type_::Array(trans_ty!(typ), P::new(self.transform_expr(&*e))),
+            ast::TyKind::Ptr(ref typ)           => Type_::Ptr(trans_ty!(typ.ty),
+                                                              self.transform_mutability(&typ.mutbl)),
+            ast::TyKind::Rptr(ref l, ref typ)   => Type_::Ref(trans_ty!(typ.ty),
+                                                              self.transform_mutability(&typ.mutbl),
+                                                              opt_map!(l, |lt| self.transform_lifetime(lt))),
+            ast::TyKind::BareFn(ref fn_ty)      => Type_::Fun(self.transform_fn_type(fn_ty)),
+            ast::TyKind::Tup(ref tys)           => Type_::Tuple(vec_map!(tys, |typ| trans_ty!(typ))),
+            ast::TyKind::Path(ref qs, ref p)    => Type_::Path(self.transform_path(p)),
+            ast::TyKind::ImplicitSelf | // ImplicitSelf needs to be inferred and there's no reason to do it here
+            ast::TyKind::Infer                  => Type_::Var(self.next_type_var()),
+            ast::TyKind::Mac(ref mac)           => Type_::Macro(self.transform_macro(mac)),
+            ast::TyKind::Err                    => Type_::Err,
+            ast::TyKind::Paren(_)               => unreachable!(),
+            // not implemented:
+            //ast::TyKind::TraitObject(bounds),
+            //ast::TyKind::ImplTrait(bounds),
+            //ast::TyKind::Typeof(P<Expr>), // currently unused by rustc
+            _ => unimplemented!()
         };
         Type {
             span: self.transform_span(&ty.span),
             node: transformed_ty
+        }
+    }
+
+    fn transform_fn_type(&mut self, fn_ty: &ast::BareFnTy) -> FunctionSig {
+        FunctionSig {
+            decl: P::new(self.transform_fn_decl(&*fn_ty.decl)),
+            unsafety: self.transform_unsafety(&fn_ty.unsafety),
+            generics: self.transform_lifetime_defs(&fn_ty.lifetimes),
+            // abi: self.transform_abi(fn_ty.abi),
         }
     }
 
@@ -476,5 +523,11 @@ impl<'a> ASTTransformer<'a> {
             line: loc.line as i32,
             column: loc.col.0 as i32
         }
+    }
+
+    fn next_type_var(&mut self) -> TypeVar {
+        let no = self.type_var_counter;
+        self.type_var_counter += 1;
+        format!("@T{}", no)
     }
 }
