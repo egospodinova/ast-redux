@@ -335,11 +335,13 @@ impl<'a> ASTTransformer<'a> {
                                  opt_map!(e, |expr| trans_exp!(expr))),
             ast::ExprKind::Mac(ref m)
                 => Expr_::Macro(self.transform_macro(m)),
+            ast::ExprKind::Range(ref s, ref e, ref l)
+                => Expr_::Range(opt_map!(s, |start| trans_exp!(start)), opt_map!(e, |end| trans_exp!(end)),
+                                self.transform_range_limits(l)),
             ast::ExprKind::Paren(ref e)
                 => unreachable!(),
             // not implemented:
             //ast::ExprKind::InlineAsm(P<InlineAsm>),
-            //ast::ExprKind::Range(Option<P<Expr>>, Option<P<Expr>>, RangeLimits),
             //ast::ExprKind::Catch(P<Block>),
             //ast::ExprKind::Type(P<Expr>, P<Ty>),
             //ast::ExprKind::InPlace(P<Expr>, P<Expr>),
@@ -380,6 +382,13 @@ impl<'a> ASTTransformer<'a> {
             ast::UnOp::Deref    => UnOp::Deref,
             ast::UnOp::Neg      => UnOp::Neg,
             ast::UnOp::Not      => UnOp::Not
+        }
+    }
+
+    fn transform_range_limits(&mut self, limits: &ast::RangeLimits) -> RangeLimits {
+        match *limits {
+            ast::RangeLimits::HalfOpen  => RangeLimits::HalfOpen,
+            ast::RangeLimits::Closed    => RangeLimits::Closed
         }
     }
 

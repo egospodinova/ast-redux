@@ -109,6 +109,11 @@ pub enum BinOp {
     Ge
 }
 
+pub enum RangeLimits {
+    HalfOpen,
+    Closed
+}
+
 pub type Expr = Spanned<Expr_>;
 pub enum Expr_ {
     Lit(Literal),
@@ -122,6 +127,7 @@ pub enum Expr_ {
     Loop(P<Block>, Option<Spanned<Identifier>>),
     While(P<Expr>, P<Block>, Option<Spanned<Identifier>>),
     For(P<Pat>, P<Expr>, P<Block>, Option<Spanned<Identifier>>),
+    Range(Option<P<Expr>>, Option<P<Expr>>, RangeLimits),
     Array(Vec<P<Expr>>),
     Repeat(P<Expr>, P<Expr>),
     Struct(Path, Vec<Field>, Option<P<Expr>>),
