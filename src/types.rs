@@ -244,9 +244,24 @@ pub struct FnDecl {
 
 pub type Path = Spanned<Vec<Spanned<PathSegment>>>;
 
+impl Named for Path {
+    fn name(&self) -> String {
+        self.node.iter()
+            .map(|segment| segment.node.name())
+            .collect::<Vec<Identifier>>()
+            .join("::")
+    }
+}
+
 pub struct PathSegment {
     pub ident: Identifier,
     // pub parameters: PathParameters
+}
+
+impl Named for PathSegment {
+    fn name(&self) -> String {
+        self.ident.to_owned()
+    }
 }
 
 pub struct PathUseItem {
