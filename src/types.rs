@@ -202,6 +202,7 @@ pub enum FloatType {
     F64
 }
 
+pub type TypeVar = String;
 pub type Type = Spanned<Type_>;
 pub enum Type_ {
     Never,
@@ -217,7 +218,10 @@ pub enum Type_ {
     Ptr(P<Type>, Mutability),
     Ref(P<Type>, Mutability, Option<Lifetime>),
     Fun(Vec<P<Type>>, P<Type>),
-    Var(String)
+    Path(Path),
+    Var(TypeVar),
+    Macro(Macro),
+    Err
 }
 
 pub struct TypeParamBound;
