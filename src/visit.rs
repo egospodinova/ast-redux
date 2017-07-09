@@ -23,7 +23,7 @@ pub trait Visitor<'ast> : Sized {
     fn visit_trait_item(&mut self, ti: &'ast TraitItem) { walk_trait_item(self, ti) }
     fn visit_impl_item(&mut self, ii: &'ast ImplItem) { walk_impl_item(self, ii) }
     fn visit_type_param_bound(&mut self, bound: &'ast TypeParamBound) {
-        //walk_type_param_bound(self, bound)
+        walk_type_param_bound(self, bound)
     }
     fn visit_variant_data(&mut self, s: &'ast VariantData) {
         walk_variant_data(self, s)
@@ -54,11 +54,11 @@ pub trait Visitor<'ast> : Sized {
         walk_path_segment(self, path_segment)
     }
     /*
-    fn visit_path_list_item(&mut self, prefix: &'ast Path, item: &'ast PathListItem) {
-        walk_path_list_item(self, prefix, item)
-    }
     fn visit_path_parameters(&mut self, path_span: Span, path_parameters: &'ast PathParameters) {
         walk_path_parameters(self, path_span, path_parameters)
+    }
+    fn visit_path_list_item(&mut self, prefix: &'ast Path, item: &'ast PathListItem) {
+        walk_path_list_item(self, prefix, item)
     }
     fn visit_assoc_type_binding(&mut self, type_binding: &'ast TypeBinding) {
         walk_assoc_type_binding(self, type_binding)
@@ -113,17 +113,6 @@ pub fn walk_crate<'a, V: Visitor<'a>>(visitor: &mut V, krate: &'a Crate) {
 pub fn walk_mod<'a, V: Visitor<'a>>(visitor: &mut V, module: &'a Mod) {
     walk_list!(visitor, visit_item, &module.items);
 }
-
-/*
-pub fn walk_local<'a, V: Visitor<'a>>(visitor: &mut V, local: &'a Local) {
-    for attr in local.attrs.iter() {
-        visitor.visit_attribute(attr);
-    }
-    visitor.visit_pat(&local.pat);
-    walk_list!(visitor, visit_type, &local.ty);
-    walk_list!(visitor, visit_expr, &local.expr);
-}
-*/
 
 pub fn walk_lifetime<'a, V: Visitor<'a>>(visitor: &mut V, lifetime: &'a Lifetime) {
     //visitor.visit_ident(lifetime);
@@ -386,18 +375,18 @@ pub fn walk_foreign_item<'a, V: Visitor<'a>>(visitor: &mut V, foreign_item: &'a 
 pub fn walk_global_asm<'a, V: Visitor<'a>>(_: &mut V, _: &'a GlobalAsm) {
     // Empty!
 }
-
+*/
 pub fn walk_type_param_bound<'a, V: Visitor<'a>>(visitor: &mut V, bound: &'a TypeParamBound) {
-    match *bound {
+    /*match *bound {
         TraitTyParamBound(ref typ, ref modifier) => {
             visitor.visit_poly_trait_ref(typ, modifier);
         }
         RegionTyParamBound(ref lifetime) => {
             visitor.visit_lifetime(lifetime);
         }
-    }
+    }*/
 }
-*/
+
 pub fn walk_generics<'a, V: Visitor<'a>>(visitor: &mut V, generics: &'a Generics) {
     /*for param in &generics.ty_params {
         visitor.visit_ident(param.span, param.ident);
