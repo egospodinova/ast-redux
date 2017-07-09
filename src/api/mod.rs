@@ -102,6 +102,7 @@ pub unsafe extern fn node_get_kind(node: *const RSNode) -> RSNodeKind {
             _ => RSNodeKind::Unexposed
         },
         RSASTItem::Path(..) => RSNodeKind::Path,
+        RSASTItem::PathSegment(..) => RSNodeKind::PathSegment,
         _=> RSNodeKind::Unexposed
     }
 }
@@ -171,6 +172,7 @@ impl<'ast> ApiVisitor<'ast> {
                     &RSASTItem::TraitItem(t) => visit::walk_trait_item(self, t),
                     &RSASTItem::ImplItem(i) => visit::walk_impl_item(self, i),
                     &RSASTItem::Path(p) => visit::walk_path(self, p),
+                    &RSASTItem::PathSegment(s) => visit::walk_path_segment(self, s),
                 }
                 self.parents.pop().unwrap();
             }
@@ -206,5 +208,9 @@ impl<'ast> Visitor<'ast> for ApiVisitor<'ast> {
     fn visit_path(&mut self, p: &'ast Path) {
         let path = Box::new(RSNode::new(RSASTItem::Path(p), self.krate));
         self.walk(path.as_ref());
+    }
+    fn visit_path_segment(&mut self, s: &'ast PathSegment) {
+        let segment = Box::new(RSNode::new(RSASTItem::PathSegment(s), self.krate));
+        self.walk(segment.as_ref());
     }
 }
