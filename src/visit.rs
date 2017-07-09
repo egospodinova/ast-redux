@@ -40,9 +40,11 @@ pub trait Visitor<'ast> : Sized {
     fn visit_lifetime_def(&mut self, lifetime: &'ast LifetimeDef) {
         walk_lifetime_def(self, lifetime)
     }
-    fn visit_mac(&mut self, mac: &'ast Mac) {
+    */
+    fn visit_macro(&mut self, mac: &'ast Macro) {
     }
-    fn visit_mac_def(&mut self, mac: &'ast MacroDef) {
+    /*
+    fn visit_macro_def(&mut self, mac: &'ast MacroDef) {
     }
     */
     fn visit_path(&mut self, path: &'ast Path) {
@@ -207,8 +209,8 @@ pub fn walk_item<'a, V: Visitor<'a>>(visitor: &mut V, item: &'a Item) {
             walk_list!(visitor, visit_type_param_bound, bounds);
             walk_list!(visitor, visit_trait_item, methods);
         }
-        /*Item_::Mac(ref mac) => visitor.visit_mac(mac),
-        Item_::MacroDef(ref ts) => visitor.visit_mac_def(ts, item.id),*/
+        Item_::Macro(ref mac) => visitor.visit_macro(mac),
+        //Item_::MacroDef(ref ts) => visitor.visit_macro_def(ts, item.id),
         _ => ()
     }
     walk_list!(visitor, visit_attribute, &item.attrs);
@@ -227,7 +229,7 @@ pub fn walk_variant<'a, V>(visitor: &mut V,
 
 pub fn walk_type<'a, V: Visitor<'a>>(visitor: &mut V, typ: &'a Type) {
     match typ.node {
-        Type_::Slice(ref ty) /*| Type_::Paren(ref ty)*/ => {
+        Type_::Slice(ref ty) => {
             visitor.visit_type(ty)
         }
         Type_::Ptr(ref ty, _) => {
@@ -241,18 +243,16 @@ pub fn walk_type<'a, V: Visitor<'a>>(visitor: &mut V, typ: &'a Type) {
         Type_::Tuple(ref elem_tys) => {
             walk_list!(visitor, visit_type, elem_tys);
         }
-        /*
-        Type_::BareFn(ref function_declaration) => {
-            walk_fn_decl(visitor, &function_declaration.decl);
-            walk_list!(visitor, visit_lifetime_def, &function_declaration.lifetimes);
+        Type_::Fun(ref func) => {
+            walk_fn_decl(visitor, &func.decl);
+            //walk_list!(visitor, visit_lifetime_def, &function_declaration.lifetimes);
         }
-        */
-        /*Type_::Path(ref maybe_qself, ref path) => {
-            if let Some(ref qself) = *maybe_qself {
+        Type_::Path(ref path) => {
+            /*if let Some(ref qself) = *maybe_qself {
                 visitor.visit_type(&qself.ty);
-            }
+            }*/
             visitor.visit_path(path);
-        }*/
+        }
         Type_::Array(ref ty, ref expression) => {
             visitor.visit_type(ty);
             visitor.visit_expr(expression)
@@ -265,11 +265,9 @@ pub fn walk_type<'a, V: Visitor<'a>>(visitor: &mut V, typ: &'a Type) {
         Type_::Typeof(ref expression) => {
             visitor.visit_expr(expression)
         }
-        Type_::Infer | Type_::ImplicitSelf | Type_::Err => {}
-        Type_::Mac(ref mac) => {
-            visitor.visit_mac(mac)
-        }
         */
+        Type_::Var(_) | Type_::Err => (),
+        Type_::Macro(ref mac) => visitor.visit_macro(mac),
         _ => ()
     }
 }
@@ -363,7 +361,7 @@ pub fn walk_pat<'a, V: Visitor<'a>>(visitor: &mut V, pattern: &'a Pat) {
             walk_list!(visitor, visit_pat, slice_pattern);
             walk_list!(visitor, visit_pat, postpatterns);
         }
-        Pat_::Mac(ref mac) => visitor.visit_mac(mac),
+        Pat_::Mac(ref mac) => visitor.visit_macro(mac),
         */
     }*/
 }
@@ -486,9 +484,9 @@ pub fn walk_item_member<'a, V: Visitor<'a>>(visitor: &mut V, item_member: &'a It
             walk_list!(visitor, visit_type_param_bound, bounds);
             walk_list!(visitor, visit_type, default);
         }
-        /*ItemMember::Macro(ref mac) => {
-            visitor.visit_mac(mac);
-        }*/
+        ItemMember::Macro(ref mac) => {
+            visitor.visit_macro(mac);
+        }
         _ => ()
     }
 }
@@ -523,13 +521,13 @@ pub fn walk_stmt<'a, V: Visitor<'a>>(visitor: &mut V, statement: &'a Stmt) {
         Stmt_::ExpStmt(ref expr) | Stmt_::UnitStmt(ref expr) => {
             visitor.visit_expr(expr)
         }
-        /*Stmt_::Mac(ref mac) => {
-            let (ref mac, _, ref attrs) = **mac;
-            visitor.visit_mac(mac);
-            for attr in attrs.iter() {
+        Stmt_::Macro(ref mac) => {
+            //let (ref mac, _, ref attrs) = **mac;
+            visitor.visit_macro(mac);
+            /*for attr in attrs.iter() {
                 visitor.visit_attribute(attr);
-            }
-        }*/
+            }*/
+        }
         _ => ()
     }
 }
@@ -667,9 +665,10 @@ pub fn walk_expr<'a, V: Visitor<'a>>(visitor: &mut V, expression: &'a Expr) {
         Expr_::Return(ref expr) => {
             walk_list!(visitor, visit_expr, expr);
         }
-        /*
-        Expr_::Mac(ref mac) => visitor.visit_mac(mac),
-        Expr_::Paren(ref expr) => {
+        Expr_::Macro(ref mac) => {
+            visitor.visit_macro(mac);
+        }
+        /*Expr_::Paren(ref expr) => {
             visitor.visit_expr(expr)
         }
         Expr_::InlineAsm(ref ia) => {

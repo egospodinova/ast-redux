@@ -278,7 +278,8 @@ pub enum Item_ {
     Struct(VariantData, Generics),
     Trait(Unsafety, Generics, Vec<TypeParamBound>, Vec<TraitItem>),
     Impl(Unsafety, Generics, Option<Path>, P<Type>, Vec<ImplItem>),
-    Fn(FunctionSig, P<Block>)
+    Fn(FunctionSig, P<Block>),
+    Macro(Macro)
 }
 
 pub type TraitItem = ItemLike<ItemMember>;
