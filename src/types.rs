@@ -140,7 +140,6 @@ pub enum Expr_ {
     Continue(Option<Spanned<Identifier>>),
     Return(Option<P<Expr>>),
     Macro(Macro),
-    Paren(P<Expr>),
     Box(P<Expr>)
 }
 

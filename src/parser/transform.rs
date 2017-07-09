@@ -260,6 +260,11 @@ impl<'a> ASTTransformer<'a> {
         macro_rules! trans_exp {
             ($e:expr) => (P::new(self.transform_expr(&*$e)))
         }
+
+        if let ast::ExprKind::Paren(ref e) = expr.node {
+            return self.transform_expr(e);
+        }
+
         let expr_kind = match expr.node {
             ast::ExprKind::Box(ref e)
                 => Expr_::Box(trans_exp!(e)),
@@ -331,7 +336,7 @@ impl<'a> ASTTransformer<'a> {
             ast::ExprKind::Mac(ref m)
                 => Expr_::Macro(self.transform_macro(m)),
             ast::ExprKind::Paren(ref e)
-                => Expr_::Paren(trans_exp!(e)),
+                => unreachable!(),
             // not implemented:
             //ast::ExprKind::InlineAsm(P<InlineAsm>),
             //ast::ExprKind::Range(Option<P<Expr>>, Option<P<Expr>>, RangeLimits),
