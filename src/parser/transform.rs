@@ -539,10 +539,10 @@ impl<'a> ASTTransformer<'a> {
         }
     }
 
-    fn transform_path_segment(&mut self, segment: &ast::PathSegment) -> Spanned<PathSegment> {
+    fn transform_path_segment(&mut self, segment: &ast::PathSegment) -> PathSegment {
         Spanned {
             span: self.transform_span(&segment.span),
-            node: PathSegment {
+            node: PathSegment_ {
                 ident: self.transform_symbol(&segment.identifier.name)
             }
         }

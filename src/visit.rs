@@ -50,12 +50,12 @@ pub trait Visitor<'ast> : Sized {
     fn visit_path(&mut self, path: &'ast Path) {
         walk_path(self, path)
     }
+    fn visit_path_segment(&mut self, path_segment: &'ast PathSegment) {
+        walk_path_segment(self, path_segment)
+    }
     /*
     fn visit_path_list_item(&mut self, prefix: &'ast Path, item: &'ast PathListItem) {
         walk_path_list_item(self, prefix, item)
-    }
-    fn visit_path_segment(&mut self, span: &'ast Span, path_segment: &'ast PathSegment) {
-        walk_path_segment(self, span, path_segment)
     }
     fn visit_path_parameters(&mut self, path_span: Span, path_parameters: &'ast PathParameters) {
         walk_path_parameters(self, path_span, path_parameters)
@@ -274,7 +274,7 @@ pub fn walk_type<'a, V: Visitor<'a>>(visitor: &mut V, typ: &'a Type) {
 
 pub fn walk_path<'a, V: Visitor<'a>>(visitor: &mut V, path: &'a Path) {
     for segment in &path.node {
-        //visitor.visit_path_segment(segment.span, segment.node);
+        visitor.visit_path_segment(&segment);
     }
 }
 
@@ -287,9 +287,8 @@ pub fn walk_path_list_item<'a, V: Visitor<'a>>(visitor: &mut V,
 }
 */
 pub fn walk_path_segment<'a, V: Visitor<'a>>(visitor: &mut V,
-                                             span: &'a Span,
                                              segment: &'a PathSegment) {
-    visitor.visit_ident(span, &segment.ident);
+    visitor.visit_ident(&segment.span, &segment.node.ident);
     /*if let Some(ref parameters) = segment.parameters {
         visitor.visit_path_parameters(path_span, parameters);
     }*/
