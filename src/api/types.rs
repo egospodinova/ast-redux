@@ -120,18 +120,18 @@ pub enum RSASTItem<'ast> {
 impl<'ast> RSASTItem<'ast> {
     pub fn span(&self) -> Option<types::Span> {
         match *self {
-            RSASTItem::Crate(ref c)        => Some(c.span),
-            RSASTItem::Item(ref i)         => Some(i.span),
-            RSASTItem::Variant(ref v, _)   => Some(v.span),
-            RSASTItem::Field(ref f)        => Some(f.span),
+            RSASTItem::Crate(ref c)         => Some(c.span),
+            RSASTItem::Item(ref i)          => Some(i.span),
+            RSASTItem::Variant(ref v, _)    => Some(v.span),
+            RSASTItem::Field(ref f)         => Some(f.span),
             // FIXME move this out of here:
-            RSASTItem::Pat(ref p)          => match p.node {
+            RSASTItem::Pat(ref p)           => match p.node {
                 types::Pat_::Ident(ref id, ..) => Some(id.span),
                 _ => None
             },
-            RSASTItem::TraitItem(ref ti)   => Some(ti.span),
-            RSASTItem::ImplItem(ref ii)    => Some(ii.span)
-            RSASTItem::Path(ref p)         => Some(p.span),
+            RSASTItem::TraitItem(ref ti)    => Some(ti.span),
+            RSASTItem::ImplItem(ref ii)     => Some(ii.span),
+            RSASTItem::Path(ref p)          => Some(p.span),
         }
     }
 }
