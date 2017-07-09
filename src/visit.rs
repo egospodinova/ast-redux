@@ -319,51 +319,54 @@ pub fn walk_assoc_type_binding<'a, V: Visitor<'a>>(visitor: &mut V,
     visitor.visit_type(&type_binding.ty);
 }
 */
-pub fn walk_pat<'a, V: Visitor<'a>>(visitor: &mut V, pattern: &'a Pat) {
-    /*match pattern.node {
-        /*Pat_::TupleStruct(ref path, ref children, _) => {
-            visitor.visit_path(path, pattern.id);
-            walk_list!(visitor, visit_pat, children);
+pub fn walk_pat<'a, V: Visitor<'a>>(visitor: &mut V, pat: &'a Pat) {
+    match pat.node {
+        Pat_::Wildcard => (),
+        Pat_::Ident(ref ident, _, _, ref sub) => {
+            visitor.visit_ident(&ident.span, &ident.node);
+            walk_list!(visitor, visit_pat, sub);
         }
-        Pat_::Path(ref opt_qself, ref path) => {
-            if let Some(ref qself) = *opt_qself {
-                visitor.visit_type(&qself.ty);
-            }
-            visitor.visit_path(path, pattern.id)
-        }
+        Pat_::Lit(ref expression) => visitor.visit_expr(expression),
         Pat_::Struct(ref path, ref fields, _) => {
-            visitor.visit_path(path, pattern.id);
+            visitor.visit_path(path);
             for field in fields {
-                walk_list!(visitor, visit_attribute, field.node.attrs.iter());
-                visitor.visit_ident(field.span, field.node.ident);
-                visitor.visit_pat(&field.node.pat)
+                walk_list!(visitor, visit_attribute, field.attrs.iter());
+                // the span here isn't strictly correct, as we discard it during transformation
+                // however, given that there are a lot of places where a Spanned<Identifier> is preferred
+                // over a simple Identifier, requiring correction of the span on the user side, we
+                // ignore this
+                walk_opt_ident(visitor, &field.span, &field.ident);
+                visitor.visit_pat(&field.node)
             }
+        }
+        Pat_::TupleStruct(ref path, ref fields, _) => {
+            visitor.visit_path(path);
+            walk_list!(visitor, visit_pat, fields);
+        }
+        Pat_::Path(/*ref opt_qself,*/ ref path) => {
+            /*if let Some(ref qself) = *opt_qself {
+                visitor.visit_type(&qself.ty);
+            }*/
+            visitor.visit_path(path)
         }
         Pat_::Tuple(ref tuple_elements, _) => {
             walk_list!(visitor, visit_pat, tuple_elements);
         }
-        Pat_::Box(ref subpattern) |
-        Pat_::Ref(ref subpattern, _) => {
-            visitor.visit_pat(subpattern)
+        Pat_::Box(ref sub) |
+        Pat_::Ref(ref sub, _) => {
+            visitor.visit_pat(sub)
         }
-        Pat_::Ident(_, ref pth1, ref optional_subpattern) => {
-            visitor.visit_ident(pth1.span, pth1.node);
-            walk_list!(visitor, visit_pat, optional_subpattern);
+        Pat_::Range(ref begin, ref end, _) => {
+            visitor.visit_expr(begin);
+            visitor.visit_expr(end);
         }
-        Pat_::Lit(ref expression) => visitor.visit_expr(expression),
-        Pat_::Range(ref lower_bound, ref upper_bound, _) => {
-            visitor.visit_expr(lower_bound);
-            visitor.visit_expr(upper_bound);
+        Pat_::Slice(ref begin, ref mid, ref end) => {
+            walk_list!(visitor, visit_pat, begin);
+            walk_list!(visitor, visit_pat, mid);
+            walk_list!(visitor, visit_pat, end);
         }
-        Pat_::Wild => (),
-        Pat_::Slice(ref prepatterns, ref slice_pattern, ref postpatterns) => {
-            walk_list!(visitor, visit_pat, prepatterns);
-            walk_list!(visitor, visit_pat, slice_pattern);
-            walk_list!(visitor, visit_pat, postpatterns);
-        }
-        Pat_::Mac(ref mac) => visitor.visit_macro(mac),
-        */
-    }*/
+        Pat_::Macro(ref mac) => visitor.visit_macro(mac),
+    }
 }
 /*
 pub fn walk_foreign_item<'a, V: Visitor<'a>>(visitor: &mut V, foreign_item: &'a ForeignItem) {
