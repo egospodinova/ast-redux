@@ -13,6 +13,7 @@ pub enum RSNodeKind {
     FunctionDecl,
     ParmDecl,
     VarDecl,
+    PathUse,
     Unexposed
 }
 
@@ -113,6 +114,7 @@ pub enum RSASTItem<'ast> {
     Pat(&'ast types::Pat),
     TraitItem(&'ast types::TraitItem),
     ImplItem(&'ast types::ImplItem),
+    Path(&'ast types::Path),
 }
 
 impl<'ast> RSASTItem<'ast> {
@@ -129,6 +131,7 @@ impl<'ast> RSASTItem<'ast> {
             },
             RSASTItem::TraitItem(ref ti)   => Some(ti.span),
             RSASTItem::ImplItem(ref ii)    => Some(ii.span)
+            RSASTItem::Path(ref p)         => Some(p.span),
         }
     }
 }

@@ -64,6 +64,7 @@ pub unsafe extern fn node_get_spelling_name(node: *const RSNode) -> *const ::lib
         },
         RSASTItem::TraitItem(t) => CString::new(t.name()).unwrap().into_raw(),
         RSASTItem::ImplItem(i) => CString::new(i.name()).unwrap().into_raw(),
+        RSASTItem::Path(p) => CString::new(p.name()).unwrap().into_raw(),
         _ => ptr::null()
     }
 }
@@ -114,6 +115,7 @@ pub unsafe extern fn node_get_kind(node: *const RSNode) -> RSNodeKind {
             ItemMember::Method(..) => RSNodeKind::FunctionDecl,
             _ => RSNodeKind::Unexposed
         },
+        RSASTItem::Path(..) => RSNodeKind::PathUse,
         _=> RSNodeKind::Unexposed
     }
 }
@@ -182,6 +184,7 @@ impl<'ast> ApiVisitor<'ast> {
                     &RSASTItem::Pat(p) => visit::walk_pat(self, p),
                     &RSASTItem::TraitItem(t) => visit::walk_trait_item(self, t),
                     &RSASTItem::ImplItem(i) => visit::walk_impl_item(self, i),
+                    &RSASTItem::Path(p) => visit::walk_path(self, p),
                 }
                 self.parents.pop().unwrap();
             }
@@ -213,5 +216,9 @@ impl<'ast> Visitor<'ast> for ApiVisitor<'ast> {
     fn visit_variant(&mut self, v: &'ast EnumVariant, g: &'ast Generics) {
         let var = Box::new(RSNode::new(RSASTItem::Variant(v, g), self.krate));
         self.walk(var.as_ref());
+    }
+    fn visit_path(&mut self, p: &'ast Path) {
+        let path = Box::new(RSNode::new(RSASTItem::Path(p), self.krate));
+        self.walk(path.as_ref());
     }
 }
