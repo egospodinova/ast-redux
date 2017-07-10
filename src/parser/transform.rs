@@ -279,9 +279,22 @@ impl<'a> ASTTransformer<'a> {
 
     fn transform_variant_data(&mut self, variant_data: &ast::VariantData) -> VariantData {
         match *variant_data {
-            ast::VariantData::Unit(_)               => VariantData::Unit,
-            ast::VariantData::Struct(ref fields, _) => VariantData::Struct(vec![]),
-            ast::VariantData::Tuple(ref fields, _)  => VariantData::Tuple(vec![])
+            ast::VariantData::Unit(_)
+                => VariantData::Unit,
+            ast::VariantData::Struct(ref fields, _)
+                => VariantData::Struct(vec_map!(fields, |f| self.transform_struct_field(f))),
+            ast::VariantData::Tuple(ref fields, _)
+                => VariantData::Tuple(vec_map!(fields, |f| self.transform_struct_field(f))),
+        }
+    }
+
+    fn transform_struct_field(&mut self, field: &ast::StructField) -> StructField {
+        StructField {
+            ident: opt_map!(field.ident, |i| self.transform_symbol(&i.name)),
+            attrs: self.transform_attrs(&field.attrs),
+            span: self.transform_span(&field.span),
+            vis: self.transform_visibility(&field.vis),
+            node: P::new(self.transform_type(&field.ty))
         }
     }
 
