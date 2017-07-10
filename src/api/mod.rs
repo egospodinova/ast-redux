@@ -67,7 +67,7 @@ pub unsafe extern fn node_get_spelling_range(node: *const RSNode) -> RSRange {
 #[no_mangle]
 pub unsafe extern fn node_get_extent(node: *const RSNode) -> RSRange {
     if let Some(ref span) = (*node).get_ast_item().span() {
-        RSRange::at_span_start(span)
+        RSRange::from_span(span)
     } else {
         RSRange::invalid()
     }
