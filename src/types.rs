@@ -69,7 +69,14 @@ pub enum Literal {
 }
 
 pub struct Generics;
-pub struct Visibility;
+
+pub enum Visibility {
+    Public,
+    Crate,
+    Restricted(Path),
+    Inherited
+}
+
 pub struct Lifetime;
 
 pub enum Mutability {

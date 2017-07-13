@@ -315,7 +315,12 @@ impl<'a> ASTTransformer<'a> {
     }
 
     fn transform_visibility(&mut self, visibility: &ast::Visibility) -> Visibility {
-        Visibility {}
+        match *visibility {
+            ast::Visibility::Public     => Visibility::Public,
+            ast::Visibility::Crate(..)  => Visibility::Crate,
+            ast::Visibility::Restricted { ref path, .. } => Visibility::Restricted(self.transform_path(&*path)),
+            ast::Visibility::Inherited  => Visibility::Inherited
+        }
     }
 
     fn transform_type(&mut self, ty: &ast::Ty) -> Type {
