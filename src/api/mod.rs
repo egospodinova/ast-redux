@@ -31,10 +31,9 @@ pub unsafe extern fn parse_crate(name: *mut ::libc::c_char, src: *mut ::libc::c_
     let name = if !name.is_null() { CStr::from_ptr(name).to_str().unwrap_or("") } else { "" };
 
     if let Ok(source_str) = CStr::from_ptr(src).to_str() {
-        if let Some(krate) = parse_source(name.to_owned(), source_str.to_owned()) {
-            let rs_crate = Box::new(RSCrate::new(krate));
-            return Box::into_raw(rs_crate);
-        }
+        let (krate, diagnostics) = parse_source(name.to_owned(), source_str.to_owned());
+        let rs_crate = Box::new(RSCrate::new(krate, diagnostics));
+        return Box::into_raw(rs_crate);
     }
 
     ptr::null()
@@ -43,7 +42,12 @@ pub unsafe extern fn parse_crate(name: *mut ::libc::c_char, src: *mut ::libc::c_
 #[no_mangle]
 pub unsafe extern fn node_from_crate<'a>(krate: *const RSCrate) -> *const RSNode<'a> {
     if krate.is_null() { return ptr::null(); }
-    Box::into_raw(Box::new(RSNode::from_crate(&*krate)))
+
+    if let Some(ref ast) = *(*krate).get_ast() {
+        Box::into_raw(Box::new(RSNode::new(RSASTItem::Crate(ast), &*krate)))
+    } else {
+        ptr::null()
+    }
 }
 
 #[no_mangle]

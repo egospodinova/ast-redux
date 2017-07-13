@@ -1,4 +1,5 @@
 use types::{self, Named};
+use diagnostics::Diagnostic;
 
 #[repr(C)]
 pub enum RSNodeKind {
@@ -84,13 +85,6 @@ pub struct RSNode<'a> {
 }
 
 impl<'a> RSNode<'a> {
-    pub fn from_crate(krate: &'a RSCrate) -> RSNode<'a> {
-        RSNode {
-            data: RSASTItem::Crate(krate.get_ast()),
-            krate: krate
-        }
-    }
-
     pub fn new(data: RSASTItem<'a>, krate: &'a RSCrate) -> RSNode<'a> {
         RSNode {
             data: data,
@@ -160,17 +154,19 @@ impl<'ast> RSASTItem<'ast> {
 }
 
 pub struct RSCrate {
-    ast: types::Crate,
+    ast: Option<types::Crate>,
+    diagnostics: Vec<Diagnostic>
 }
 
 impl RSCrate {
-    pub fn new(ast: types::Crate) -> RSCrate {
+    pub fn new(ast: Option<types::Crate>, diagnostics: Vec<Diagnostic>) -> RSCrate {
         RSCrate {
             ast: ast,
+            diagnostics: diagnostics
         }
     }
 
-    pub fn get_ast(&self) -> &types::Crate {
+    pub fn get_ast(&self) -> &Option<types::Crate> {
         &self.ast
     }
 }

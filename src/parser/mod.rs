@@ -1,14 +1,20 @@
 mod transform;
+mod error_handler;
 
 use std::io;
 use std::thread;
+use std::rc::Rc;
+use std::sync::Arc;
 
-use syntax::codemap::FilePathMapping;
+use syntax::codemap::{FilePathMapping, CodeMap};
 use syntax::parse::ParseSess;
 use syntax::parse::parser::Parser;
 use syntax::parse::lexer::StringReader;
+use syntax::errors::Handler;
 
 use parser::transform::ASTTransformer;
+use parser::error_handler::{TransformingEmitter, DiagnosticTransformer};
+use diagnostics::Diagnostic;
 use types::Crate;
 
 /*
@@ -44,7 +50,10 @@ impl<'a> CompilerCalls<'a> for ParserCalls {
 */
 
 macro_rules! maybe {
-    ($e:expr) => (match $e { Ok(value) => value, Err(_) => return None })
+    ($e:expr) => (match $e {
+        Ok(value) => value,
+        Err(mut db) => { db.emit(); return None }
+    })
 }
 
 fn run_parser<F, R>(f: F) -> Option<R>
@@ -59,9 +68,15 @@ fn run_parser<F, R>(f: F) -> Option<R>
     join_handle.unwrap().join().ok()
 }
 
-pub fn parse_source(name: String, source: String) -> Option<Crate> {
-    run_parser(move || -> Option<Crate> {
-        let parse_sess = ParseSess::new(FilePathMapping::empty());
+pub fn parse_source(name: String, source: String) -> (Option<Crate>, Vec<Diagnostic>) {
+    let transformer = Arc::new(DiagnosticTransformer::new());
+    let local_transformer = transformer.clone();
+    let krate = run_parser(move || -> Option<Crate> {
+        let emitter = Box::new(TransformingEmitter::new(transformer.clone()));
+
+        let codemap = Rc::new(CodeMap::new(FilePathMapping::empty()));
+        let handler = Handler::with_emitter(true, false, emitter);
+        let parse_sess = ParseSess::with_span_handler(handler, codemap);
         let filemap = parse_sess.codemap().new_filemap(name, source);
         let mut lexer = StringReader::new(&parse_sess, filemap);
         lexer.real_token();
@@ -70,6 +85,8 @@ pub fn parse_source(name: String, source: String) -> Option<Crate> {
 
         let mut transformer = ASTTransformer::new(false, parse_sess.codemap());
         Some(transformer.transform_crate(&krate))
-    }).and_then(|k| k)
+    }).and_then(|k| k);
+
+    (krate, local_transformer.get_diagnostics().clone())
 }
 
