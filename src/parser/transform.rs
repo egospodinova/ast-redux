@@ -63,6 +63,8 @@ impl<'a> ASTTransformer<'a> {
                 => Item_::Static(P::new(self.transform_type(&*ty)),
                                  self.transform_mutability(&mu),
                                  P::new(self.transform_expr(&*init))),
+            ast::ItemKind::Use(ref view_path)
+                => Item_::Use(P::new(self.transform_use(&*view_path))),
             ast::ItemKind::Const(ref ty, ref init)
                 => Item_::Const(P::new(self.transform_type(&*ty)),
                                 P::new(self.transform_expr(&*init))),
@@ -92,7 +94,6 @@ impl<'a> ASTTransformer<'a> {
                 => Item_::Fn(self.transform_function_sig(&*decl, unsafety, constness, abi, generics),
                              P::new(self.transform_block(block))),
             // not implemented:
-            //ast::ItemKind::Use(P<ViewPath>),
             //ast::ItemKind::ForeignMod(ForeignMod),
             //ast::ItemKind::GlobalAsm(P<GlobalAsm>),
             //ast::ItemKind::Union(VariantData, Generics),
@@ -100,6 +101,25 @@ impl<'a> ASTTransformer<'a> {
             //ast::ItemKind::Mac(Mac),
             //ast::ItemKind::MacroDef(MacroDef),
             _ => unimplemented!()
+        }
+    }
+
+    fn transform_use(&mut self, view_path: &ast::ViewPath) -> PathUse {
+        match view_path.node {
+            ast::ViewPath_::ViewPathSimple(ref new_name, ref path)
+                => PathUse::Simple(self.transform_path(path), self.transform_symbol(&new_name.name)),
+            ast::ViewPath_::ViewPathGlob(ref path)
+                => PathUse::Glob(self.transform_path(path)),
+            ast::ViewPath_::ViewPathList(ref path, ref items)
+                => PathUse::List(self.transform_path(path), vec_map!(items, |i| self.transform_use_item(i)))
+        }
+    }
+
+    fn transform_use_item(&mut self, item: &ast::PathListItem) -> PathUseItem {
+        let orig_ident = self.transform_symbol(&item.node.name.name);
+        PathUseItem {
+            orig_ident: orig_ident.clone(),
+            renamed_ident: opt_map!(item.node.rename, |i| self.transform_symbol(&i.name)).unwrap_or(orig_ident)
         }
     }
 
