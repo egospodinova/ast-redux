@@ -18,7 +18,7 @@ pub unsafe extern fn visit_children(node: *mut RSNode, callback: CallbackFn, dat
     }
 
     let mut visitor = ApiVisitor::new((*node).get_crate(), callback, data);
-    visitor.walk(node);
+    visitor.walk(node, RSVisitResult::Recurse);
 }
 
 #[no_mangle]
@@ -151,7 +151,7 @@ impl<'ast> ApiVisitor<'ast> {
         }
     }
 
-    fn walk(&mut self, node: *const RSNode<'ast>) {
+    fn visit(&mut self, node: *const RSNode<'ast>) {
         let result = {
             if let Some(parent) = self.parents.last() {
                 (self.callback)(node, *parent, self.data)
@@ -162,6 +162,10 @@ impl<'ast> ApiVisitor<'ast> {
             }
         };
 
+        self.walk(node, result);
+    }
+
+    fn walk(&mut self, node: *const RSNode<'ast>, result: RSVisitResult) {
         match result {
             RSVisitResult::Continue => (),
             RSVisitResult::Break => { self.should_stop = true },
@@ -187,34 +191,34 @@ impl<'ast> ApiVisitor<'ast> {
 impl<'ast> Visitor<'ast> for ApiVisitor<'ast> {
     fn visit_item(&mut self, i: &'ast Item) {
         let item = Box::new(RSNode::new(RSASTItem::Item(i), self.krate));
-        self.walk(item.as_ref());
+        self.visit(item.as_ref());
     }
     fn visit_pat(&mut self, p: &'ast Pat) {
         let pat = Box::new(RSNode::new(RSASTItem::Pat(p), self.krate));
-        self.walk(pat.as_ref());
+        self.visit(pat.as_ref());
     }
     fn visit_trait_item(&mut self, ti: &'ast TraitItem) {
         let trait_item = Box::new(RSNode::new(RSASTItem::TraitItem(ti), self.krate));
-        self.walk(trait_item.as_ref());
+        self.visit(trait_item.as_ref());
     }
     fn visit_impl_item(&mut self, ii: &'ast ImplItem) {
         let impl_item = Box::new(RSNode::new(RSASTItem::ImplItem(ii), self.krate));
-        self.walk(impl_item.as_ref());
+        self.visit(impl_item.as_ref());
     }
     fn visit_struct_field(&mut self, s: &'ast StructField) {
         let field = Box::new(RSNode::new(RSASTItem::Field(s), self.krate));
-        self.walk(field.as_ref());
+        self.visit(field.as_ref());
     }
     fn visit_variant(&mut self, v: &'ast EnumVariant, g: &'ast Generics) {
         let var = Box::new(RSNode::new(RSASTItem::Variant(v, g), self.krate));
-        self.walk(var.as_ref());
+        self.visit(var.as_ref());
     }
     fn visit_path(&mut self, p: &'ast Path) {
         let path = Box::new(RSNode::new(RSASTItem::Path(p), self.krate));
-        self.walk(path.as_ref());
+        self.visit(path.as_ref());
     }
     fn visit_path_segment(&mut self, s: &'ast PathSegment) {
         let segment = Box::new(RSNode::new(RSASTItem::PathSegment(s), self.krate));
-        self.walk(segment.as_ref());
+        self.visit(segment.as_ref());
     }
 }
