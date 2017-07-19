@@ -141,6 +141,7 @@ pub enum Expr_ {
     Tuple(Vec<P<Expr>>),
     Cast(P<Expr>, P<Type>),
     Call(P<Expr>, Vec<P<Expr>>),
+    MethodCall(PathSegment, Vec<P<Expr>>),
     Assign(P<Expr>, P<Expr>),
     BinAppAssign(BinOp, P<Expr>, P<Expr>),
     Closure(CaptureKind, P<FnDecl>, P<Expr>),

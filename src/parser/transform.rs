@@ -393,7 +393,7 @@ impl<'a> ASTTransformer<'a> {
             ast::ExprKind::Call(ref e, ref args)
                 => Expr_::Call(trans_exp!(e), vec_map!(args, |e| trans_exp!(e))),
             ast::ExprKind::MethodCall(ref segment, ref args)
-                => unimplemented!(),
+                => Expr_::MethodCall(self.transform_path_segment(segment), vec_map!(args, |e| trans_exp!(e))),
             ast::ExprKind::Tup(ref es)
                 => Expr_::Tuple(vec_map!(es, |e| trans_exp!(e))),
             ast::ExprKind::Binary(ref op, ref lhs, ref rhs)
