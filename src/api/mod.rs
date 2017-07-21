@@ -186,39 +186,43 @@ impl<'ast> ApiVisitor<'ast> {
             }
         }
     }
+
+    fn create_node(&mut self, ast_item: RSASTItem<'ast>) -> Box<RSNode<'ast>> {
+        Box::new(RSNode::new(ast_item, self.krate))
+    }
 }
 
 impl<'ast> Visitor<'ast> for ApiVisitor<'ast> {
     fn visit_item(&mut self, i: &'ast Item) {
-        let item = Box::new(RSNode::new(RSASTItem::Item(i), self.krate));
+        let item = self.create_node(RSASTItem::Item(i));
         self.visit(item.as_ref());
     }
     fn visit_pat(&mut self, p: &'ast Pat) {
-        let pat = Box::new(RSNode::new(RSASTItem::Pat(p), self.krate));
+        let pat = self.create_node(RSASTItem::Pat(p));
         self.visit(pat.as_ref());
     }
     fn visit_trait_item(&mut self, ti: &'ast TraitItem) {
-        let trait_item = Box::new(RSNode::new(RSASTItem::TraitItem(ti), self.krate));
+        let trait_item = self.create_node(RSASTItem::TraitItem(ti));
         self.visit(trait_item.as_ref());
     }
     fn visit_impl_item(&mut self, ii: &'ast ImplItem) {
-        let impl_item = Box::new(RSNode::new(RSASTItem::ImplItem(ii), self.krate));
+        let impl_item = self.create_node(RSASTItem::ImplItem(ii));
         self.visit(impl_item.as_ref());
     }
     fn visit_struct_field(&mut self, s: &'ast StructField) {
-        let field = Box::new(RSNode::new(RSASTItem::Field(s), self.krate));
+        let field = self.create_node(RSASTItem::Field(s));
         self.visit(field.as_ref());
     }
     fn visit_variant(&mut self, v: &'ast EnumVariant, g: &'ast Generics) {
-        let var = Box::new(RSNode::new(RSASTItem::Variant(v, g), self.krate));
+        let var = self.create_node(RSASTItem::Variant(v, g));
         self.visit(var.as_ref());
     }
     fn visit_path(&mut self, p: &'ast Path) {
-        let path = Box::new(RSNode::new(RSASTItem::Path(p), self.krate));
+        let path = self.create_node(RSASTItem::Path(p));
         self.visit(path.as_ref());
     }
     fn visit_path_segment(&mut self, s: &'ast PathSegment) {
-        let segment = Box::new(RSNode::new(RSASTItem::PathSegment(s), self.krate));
+        let segment = self.create_node(RSASTItem::PathSegment(s));
         self.visit(segment.as_ref());
     }
 }
