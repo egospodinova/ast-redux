@@ -82,14 +82,20 @@ impl RSRange {
 pub struct RSNode<'a> {
     data: RSASTItem<'a>,
     krate: &'a RSCrate,
+    id: u32
 }
 
 impl<'a> RSNode<'a> {
-    pub fn new(data: RSASTItem<'a>, krate: &'a RSCrate) -> RSNode<'a> {
+    pub fn new(data: RSASTItem<'a>, krate: &'a RSCrate, id: u32) -> RSNode<'a> {
         RSNode {
             data: data,
-            krate: krate
+            krate: krate,
+            id: id
         }
+    }
+
+    pub fn get_id(&self) -> u32 {
+        self.id
     }
 
     pub fn get_crate(&self) -> &RSCrate {

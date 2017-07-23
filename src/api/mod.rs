@@ -17,7 +17,7 @@ pub unsafe extern fn visit_children(node: *mut RSNode, callback: CallbackFn, dat
         return;
     }
 
-    let mut visitor = ApiVisitor::new((*node).get_crate(), callback, data);
+    let mut visitor = ApiVisitor::new((*node).get_crate(), callback, data, (*node).get_id());
     visitor.walk(node, RSVisitResult::Recurse);
 }
 
@@ -44,10 +44,15 @@ pub unsafe extern fn node_from_crate<'a>(krate: *const RSCrate) -> *const RSNode
     if krate.is_null() { return ptr::null(); }
 
     if let Some(ref ast) = *(*krate).get_ast() {
-        Box::into_raw(Box::new(RSNode::new(RSASTItem::Crate(ast), &*krate)))
+        Box::into_raw(Box::new(RSNode::new(RSASTItem::Crate(ast), &*krate, 0)))
     } else {
         ptr::null()
     }
+}
+
+#[no_mangle]
+pub unsafe extern fn node_get_id(node: *const RSNode) -> u32 {
+    (*node).get_id()
 }
 
 #[no_mangle]
@@ -137,17 +142,19 @@ struct ApiVisitor<'ast> {
     data: ClientData,
     parents: Vec<*const RSNode<'ast>>,
     krate: &'ast RSCrate,
-    should_stop: bool
+    should_stop: bool,
+    last_id: u32
 }
 
 impl<'ast> ApiVisitor<'ast> {
-    fn new(krate: &'ast RSCrate, callback: CallbackFn, data: ClientData) -> ApiVisitor {
+    fn new(krate: &'ast RSCrate, callback: CallbackFn, data: ClientData, last_id: u32) -> ApiVisitor {
         ApiVisitor {
             callback: callback,
             data: data,
             parents: vec![],
             krate: krate,
-            should_stop: false
+            should_stop: false,
+            last_id: last_id
         }
     }
 
@@ -188,7 +195,8 @@ impl<'ast> ApiVisitor<'ast> {
     }
 
     fn create_node(&mut self, ast_item: RSASTItem<'ast>) -> Box<RSNode<'ast>> {
-        Box::new(RSNode::new(ast_item, self.krate))
+        self.last_id += 1;
+        Box::new(RSNode::new(ast_item, self.krate, self.last_id))
     }
 }
 
