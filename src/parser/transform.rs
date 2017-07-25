@@ -70,6 +70,8 @@ impl<'a> ASTTransformer<'a> {
                                 P::new(self.transform_expr(&*init))),
             ast::ItemKind::Mod(ref module)
                 => Item_::Mod(self.transform_mod(&module)),
+            ast::ItemKind::ForeignMod(ref module)
+                => Item_::ExternMod(vec![]),
             ast::ItemKind::Ty(ref ty, ref generics)
                 => Item_::TypeAlias(P::new(self.transform_type(&*ty)),
                                     self.transform_generics(&generics)),
@@ -79,6 +81,9 @@ impl<'a> ASTTransformer<'a> {
             ast::ItemKind::Struct(ref variant_data, ref generics)
                 => Item_::Struct(self.transform_variant_data(&variant_data),
                                  self.transform_generics(&generics)),
+            ast::ItemKind::Union(ref variant_data, ref generics)
+                => Item_::Union(self.transform_variant_data(&variant_data),
+                                self.transform_generics(&generics)),
             ast::ItemKind::Trait(ref unsafety, ref generics, ref bounds, ref items)
                 => Item_::Trait(self.transform_unsafety(unsafety),
                                 self.transform_generics(generics),
@@ -90,16 +95,18 @@ impl<'a> ASTTransformer<'a> {
                                opt_map!(trait_ref, |t| self.transform_path(&t.path)),
                                P::new(self.transform_type(&*ty)),
                                vec_map!(items, |i| self.transform_impl_item(i))),
+            ast::ItemKind::DefaultImpl(ref unsafety, ref trait_ref)
+                => Item_::DefaultImpl(self.transform_unsafety(unsafety),
+                                      self.transform_path(&trait_ref.path)),
             ast::ItemKind::Fn(ref decl, ref unsafety, ref constness, ref abi, ref generics, ref block)
                 => Item_::Fn(self.transform_function_sig(&*decl, unsafety, constness, abi, generics),
                              P::new(self.transform_block(block))),
+            ast::ItemKind::Mac(ref mac)
+                => Item_::Macro(self.transform_macro(&mac)),
+            ast::ItemKind::MacroDef(ref mac_def)
+                => Item_::MacroDef(self.transform_macro_def(&mac_def)),
             // not implemented:
-            //ast::ItemKind::ForeignMod(ForeignMod),
             //ast::ItemKind::GlobalAsm(P<GlobalAsm>),
-            //ast::ItemKind::Union(VariantData, Generics),
-            //ast::ItemKind::DefaultImpl(Unsafety, TraitRef),
-            //ast::ItemKind::Mac(Mac),
-            //ast::ItemKind::MacroDef(MacroDef),
             _ => unimplemented!()
         }
     }
@@ -364,13 +371,13 @@ impl<'a> ASTTransformer<'a> {
             ast::TyKind::BareFn(ref fn_ty)      => Type_::Fun(self.transform_fn_type(fn_ty)),
             ast::TyKind::Tup(ref tys)           => Type_::Tuple(vec_map!(tys, |typ| trans_ty!(typ))),
             ast::TyKind::Path(ref qs, ref p)    => Type_::Path(self.transform_path(p)),
+            ast::TyKind::TraitObject(ref bs)    => Type_::TraitObject(vec_map!(bs, |b| self.transform_bound(b))),
             ast::TyKind::ImplicitSelf | // ImplicitSelf needs to be inferred and there's no reason to do it here
             ast::TyKind::Infer                  => Type_::Var(self.next_type_var()),
             ast::TyKind::Mac(ref mac)           => Type_::Macro(self.transform_macro(mac)),
             ast::TyKind::Err                    => Type_::Err,
             ast::TyKind::Paren(_)               => unreachable!(),
             // not implemented:
-            //ast::TyKind::TraitObject(bounds),
             //ast::TyKind::ImplTrait(bounds),
             //ast::TyKind::Typeof(P<Expr>), // currently unused by rustc
             _ => unimplemented!()
@@ -478,6 +485,8 @@ impl<'a> ASTTransformer<'a> {
             ast::ExprKind::Range(ref s, ref e, ref l)
                 => Expr_::Range(opt_map!(s, |start| trans_exp!(start)), opt_map!(e, |end| trans_exp!(end)),
                                 self.transform_range_limits(l)),
+            ast::ExprKind::Try(ref e)
+                => Expr_::Try(trans_exp!(e)),
             ast::ExprKind::Paren(ref e)
                 => unreachable!(),
             // not implemented:
@@ -485,7 +494,6 @@ impl<'a> ASTTransformer<'a> {
             //ast::ExprKind::Catch(P<Block>),
             //ast::ExprKind::Type(P<Expr>, P<Ty>),
             //ast::ExprKind::InPlace(P<Expr>, P<Expr>),
-            //ast::ExprKind::Try(P<Expr>),
             _ => unimplemented!()
         };
         Expr {
@@ -601,6 +609,10 @@ impl<'a> ASTTransformer<'a> {
 
     fn transform_macro(&mut self, mac: &ast::Mac) -> Macro {
         Macro {}
+    }
+
+    fn transform_macro_def(&mut self, mac: &ast::MacroDef) -> MacroDef {
+        MacroDef {}
     }
 
     fn transform_unsafety(&mut self, unsafety: &ast::Unsafety) -> Unsafety {

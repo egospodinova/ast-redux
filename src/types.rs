@@ -153,6 +153,7 @@ pub enum Expr_ {
     Break(Option<Spanned<Identifier>>, Option<P<Expr>>),
     Continue(Option<Spanned<Identifier>>),
     Return(Option<P<Expr>>),
+    Try(P<Expr>),
     Macro(Macro),
     Box(P<Expr>)
 }
@@ -230,6 +231,7 @@ pub enum Type_ {
     Ref(P<Type>, Mutability, Option<Lifetime>),
     Fun(FunctionSig),
     Path(Path),
+    TraitObject(Vec<TypeParamBound>),
     Var(TypeVar),
     Macro(Macro),
     Err
@@ -302,6 +304,7 @@ pub struct FunctionSig {
 pub type Item = VisibleItemLike<Item_>;
 pub enum Item_ {
     ExternCrate(Option<Identifier>),
+    ExternMod(Vec<ExternItem>), // missing Abi
     Use(P<PathUse>),
     Static(P<Type>, Mutability, P<Expr>),
     Const(P<Type>, P<Expr>),
@@ -309,10 +312,19 @@ pub enum Item_ {
     TypeAlias(P<Type>, Generics),
     Enum(Vec<EnumVariant>, Generics),
     Struct(VariantData, Generics),
+    Union(VariantData, Generics),
     Trait(Unsafety, Generics, Vec<TypeParamBound>, Vec<TraitItem>),
     Impl(Unsafety, Generics, Option<Path>, P<Type>, Vec<ImplItem>),
+    DefaultImpl(Unsafety, Path),
     Fn(FunctionSig, P<Block>),
-    Macro(Macro)
+    Macro(Macro),
+    MacroDef(MacroDef)
+}
+
+pub type ExternItem = VisibleItemLike<ExternItem_>;
+pub enum ExternItem_ {
+    Fn(P<FnDecl>, Generics),
+    Static(P<Type>, Mutability)
 }
 
 pub type TraitItem = ItemLike<ItemMember>;
@@ -325,6 +337,7 @@ pub enum ItemMember {
 }
 
 pub struct Macro;
+pub struct MacroDef;
 
 pub struct Attribute;
 
