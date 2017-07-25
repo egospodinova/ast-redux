@@ -4,7 +4,7 @@ mod error_handler;
 use std::io;
 use std::thread;
 use std::rc::Rc;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use syntax::codemap::{FilePathMapping, CodeMap};
 use syntax::parse::ParseSess;
@@ -69,10 +69,10 @@ fn run_parser<F, R>(f: F) -> Option<R>
 }
 
 pub fn parse_source(name: String, source: String) -> (Option<Crate>, Vec<Diagnostic>) {
-    let transformer = Arc::new(DiagnosticTransformer::new());
-    let local_transformer = transformer.clone();
+    let transformer = Arc::new(Mutex::new(DiagnosticTransformer::new()));
+    let parser_transformer_copy = transformer.clone();
     let krate = run_parser(move || -> Option<Crate> {
-        let emitter = Box::new(TransformingEmitter::new(transformer.clone()));
+        let emitter = Box::new(TransformingEmitter::new(parser_transformer_copy));
 
         let codemap = Rc::new(CodeMap::new(FilePathMapping::empty()));
         let handler = Handler::with_emitter(true, false, emitter);
@@ -87,6 +87,11 @@ pub fn parse_source(name: String, source: String) -> (Option<Crate>, Vec<Diagnos
         Some(transformer.transform_crate(&krate))
     }).and_then(|k| k);
 
-    (krate, local_transformer.get_diagnostics().clone())
+    let guard = match transformer.lock() {
+        Ok(guard) => guard,
+        Err(poisoned) => poisoned.into_inner()
+    };
+
+    (krate, guard.get_diagnostics().clone())
 }
 
