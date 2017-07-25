@@ -558,11 +558,10 @@ pub fn walk_expr<'a, V: Visitor<'a>>(visitor: &mut V, expression: &'a Expr) {
             visitor.visit_expr(callee);
             walk_list!(visitor, visit_expr, arguments);
         }
-        /*Expr_::MethodCall(ref ident, ref types, ref arguments) => {
-            visitor.visit_ident(ident.span, ident.node);
-            walk_list!(visitor, visit_type, types);
+        Expr_::MethodCall(ref path_segment, ref arguments) => {
+            //visitor.visit_path_segment(path_segment);
             walk_list!(visitor, visit_expr, arguments);
-        }*/
+        }
         Expr_::BinApp(_, ref lhs, ref rhs) => {
             visitor.visit_expr(lhs);
             visitor.visit_expr(rhs)
