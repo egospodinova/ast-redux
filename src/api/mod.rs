@@ -88,6 +88,7 @@ pub unsafe extern fn node_get_kind(node: *const RSNode) -> RSNodeKind {
     match *(*node).get_ast_item() {
         RSASTItem::Crate(..) => RSNodeKind::Crate,
         RSASTItem::Item(i) => match i.node {
+            Item_::Mod(..)           => RSNodeKind::Module,
             Item_::Struct(..)        => RSNodeKind::StructDecl,
             Item_::Enum(..)          => RSNodeKind::EnumDecl,
             Item_::Trait(..)         => RSNodeKind::TraitDecl,

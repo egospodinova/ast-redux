@@ -4,6 +4,7 @@ use diagnostics::Diagnostic;
 #[repr(C)]
 pub enum RSNodeKind {
     Crate,
+    Module,
     StructDecl,
     EnumDecl,
     TraitDecl,
