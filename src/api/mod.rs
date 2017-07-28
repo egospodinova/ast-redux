@@ -201,37 +201,36 @@ impl<'ast> ApiVisitor<'ast> {
     }
 }
 
+macro_rules! walk_node {
+    ($visitor:expr, $e:expr) => {
+        let node = $visitor.create_node($e);
+        $visitor.visit(node.as_ref());
+    }
+}
+
 impl<'ast> Visitor<'ast> for ApiVisitor<'ast> {
     fn visit_item(&mut self, i: &'ast Item) {
-        let item = self.create_node(RSASTItem::Item(i));
-        self.visit(item.as_ref());
+        walk_node!(self, RSASTItem::Item(i));
     }
     fn visit_pat(&mut self, p: &'ast Pat) {
-        let pat = self.create_node(RSASTItem::Pat(p));
-        self.visit(pat.as_ref());
+        walk_node!(self, RSASTItem::Pat(p));
     }
     fn visit_trait_item(&mut self, ti: &'ast TraitItem) {
-        let trait_item = self.create_node(RSASTItem::TraitItem(ti));
-        self.visit(trait_item.as_ref());
+        walk_node!(self, RSASTItem::TraitItem(ti));
     }
     fn visit_impl_item(&mut self, ii: &'ast ImplItem) {
-        let impl_item = self.create_node(RSASTItem::ImplItem(ii));
-        self.visit(impl_item.as_ref());
+        walk_node!(self, RSASTItem::ImplItem(ii));
     }
     fn visit_struct_field(&mut self, s: &'ast StructField) {
-        let field = self.create_node(RSASTItem::Field(s));
-        self.visit(field.as_ref());
+        walk_node!(self, RSASTItem::Field(s));
     }
     fn visit_variant(&mut self, v: &'ast EnumVariant, g: &'ast Generics) {
-        let var = self.create_node(RSASTItem::Variant(v, g));
-        self.visit(var.as_ref());
+        walk_node!(self, RSASTItem::Variant(v, g));
     }
     fn visit_path(&mut self, p: &'ast Path) {
-        let path = self.create_node(RSASTItem::Path(p));
-        self.visit(path.as_ref());
+        walk_node!(self, RSASTItem::Path(p));
     }
     fn visit_path_segment(&mut self, s: &'ast PathSegment) {
-        let segment = self.create_node(RSASTItem::PathSegment(s));
-        self.visit(segment.as_ref());
+        walk_node!(self, RSASTItem::PathSegment(s));
     }
 }
