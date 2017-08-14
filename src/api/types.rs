@@ -17,6 +17,7 @@ pub enum RSNodeKind {
     VarDecl,
     Path,
     PathSegment,
+    Block,
     Unexposed
 }
 
@@ -118,6 +119,7 @@ pub enum RSASTItem<'ast> {
     ImplItem(&'ast types::ImplItem),
     Path(&'ast types::Path),
     PathSegment(&'ast types::PathSegment),
+    Block(&'ast types::Block),
 }
 
 impl<'ast> RSASTItem<'ast> {
@@ -155,7 +157,8 @@ impl<'ast> RSASTItem<'ast> {
             RSASTItem::TraitItem(ref ti)    => Some(ti.span),
             RSASTItem::ImplItem(ref ii)     => Some(ii.span),
             RSASTItem::Path(ref p)          => Some(p.span),
-            RSASTItem::PathSegment(s)       => Some(s.span),
+            RSASTItem::PathSegment(ref s)   => Some(s.span),
+            RSASTItem::Block(ref b)         => Some(b.span),
         }
     }
 }
