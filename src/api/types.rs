@@ -84,7 +84,8 @@ impl RSRange {
 pub struct RSNode<'a> {
     data: RSASTItem<'a>,
     krate: &'a RSCrate,
-    id: u32
+    id: u32,
+    last_child_id: u32
 }
 
 impl<'a> RSNode<'a> {
@@ -92,7 +93,8 @@ impl<'a> RSNode<'a> {
         RSNode {
             data: data,
             krate: krate,
-            id: id
+            id: id,
+            last_child_id: id
         }
     }
 
@@ -106,6 +108,14 @@ impl<'a> RSNode<'a> {
 
     pub fn get_ast_item(&self) -> &RSASTItem<'a> {
         &self.data
+    }
+
+    pub fn get_last_child_id(&self) -> u32 {
+        self.last_child_id
+    }
+
+    pub fn set_last_child_id(&mut self, id: u32) {
+        self.last_child_id = id;
     }
 }
 

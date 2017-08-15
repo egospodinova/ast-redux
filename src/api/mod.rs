@@ -19,6 +19,7 @@ pub unsafe extern fn visit_children(node: *mut RSNode, callback: CallbackFn, dat
 
     let mut visitor = ApiVisitor::new((*node).get_crate(), callback, data, (*node).get_id());
     visitor.walk(node, RSVisitResult::Recurse);
+    (*node).set_last_child_id(visitor.last_id);
 }
 
 #[no_mangle]
@@ -171,6 +172,7 @@ impl<'ast> ApiVisitor<'ast> {
             }
         };
 
+        self.last_id = unsafe { (*node).get_last_child_id() };
         self.walk(node, result);
     }
 
