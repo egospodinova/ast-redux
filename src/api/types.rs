@@ -134,9 +134,15 @@ pub enum RSASTItem<'ast> {
 
 impl<'ast> RSASTItem<'ast> {
     pub fn name(&self) -> Option<types::Identifier> {
-        use types::Pat_;
+        use types::{Pat_, Item_, Type_};
         match *self {
-            RSASTItem::Item(i)          => Some(i.name()),
+            RSASTItem::Item(i) => match i.node {
+                Item_::Impl(_, _, _, ref ty, _) => match ty.node {
+                    Type_::Path(ref p)  => Some(p.name()),
+                    _                   => Some(i.name())
+                },
+                _                       => Some(i.name()),
+            },
             RSASTItem::Variant(v, _)    => Some(v.name()),
             RSASTItem::Field(f) => match f.ident {
                 Some(ref id)            => Some(id.clone()),
