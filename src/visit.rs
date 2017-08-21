@@ -681,10 +681,10 @@ pub fn walk_expr<'a, V: Visitor<'a>>(visitor: &mut V, expression: &'a Expr) {
 }
 
 pub fn walk_arm<'a, V: Visitor<'a>>(visitor: &mut V, arm: &'a Arm) {
-    walk_list!(visitor, visit_pat, &arm.pats);
-    walk_list!(visitor, visit_expr, &arm.guard);
-    visitor.visit_expr(&arm.expr);
-    walk_list!(visitor, visit_attribute, &arm.attrs);
+    walk_list!(visitor, visit_pat, &arm.node.pats);
+    walk_list!(visitor, visit_expr, &arm.node.guard);
+    visitor.visit_expr(&arm.node.expr);
+    walk_list!(visitor, visit_attribute, &arm.node.attrs);
 }
 
 pub fn walk_vis<'a, V: Visitor<'a>>(visitor: &mut V, vis: &'a Visibility) {

@@ -158,7 +158,8 @@ pub enum Expr_ {
     Box(P<Expr>)
 }
 
-pub struct Arm {
+pub type Arm = Spanned<Arm_>;
+pub struct Arm_ {
     pub attrs: Vec<Attribute>,
     pub pats: Vec<P<Pat>>,
     pub guard: Option<P<Expr>>,

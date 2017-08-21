@@ -1,3 +1,5 @@
+use std::cmp::Ordering;
+
 use syntax::ast;
 use syntax::abi;
 use syntax::ptr as syntax_ptr;
@@ -555,11 +557,19 @@ impl<'a> ASTTransformer<'a> {
     }
 
     fn transform_arm(&mut self, arm: &ast::Arm) -> Arm {
-        Arm {
+        let arm = Arm_ {
             attrs: self.transform_attrs(&arm.attrs),
             pats: vec_map!(arm.pats, |p| P::new(self.transform_pat(p))),
             guard: opt_map!(arm.guard, |g| P::new(self.transform_expr(&*g))),
             expr: P::new(self.transform_expr(&*arm.body))
+        };
+
+        let start = arm.pats.iter().map(|p| p.span.start).min_by(Self::compare_loc).unwrap();
+        let end = arm.expr.span.end;
+
+        Spanned {
+            span: Span { start: start, end: end },
+            node: arm
         }
     }
 
@@ -653,5 +663,16 @@ impl<'a> ASTTransformer<'a> {
         let no = self.type_var_counter;
         self.type_var_counter += 1;
         format!("@T{}", no)
+    }
+
+    fn compare_loc(lhs: &Location, rhs: &Location) -> Ordering {
+        if lhs.line < rhs.line
+            || lhs.line == rhs.line && lhs.column < rhs.column {
+            Ordering::Less
+        } else if lhs.line == rhs.line && lhs.column == rhs.column {
+            Ordering::Equal
+        } else {
+            Ordering::Greater
+        }
     }
 }
