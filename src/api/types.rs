@@ -18,6 +18,7 @@ pub enum RSNodeKind {
     Path,
     PathSegment,
     Block,
+    Arm,
     Unexposed
 }
 
@@ -130,6 +131,7 @@ pub enum RSASTItem<'ast> {
     Path(&'ast types::Path),
     PathSegment(&'ast types::PathSegment),
     Block(&'ast types::Block),
+    Arm(&'ast types::Arm),
 }
 
 impl<'ast> RSASTItem<'ast> {
@@ -175,6 +177,7 @@ impl<'ast> RSASTItem<'ast> {
             RSASTItem::Path(ref p)          => Some(p.span),
             RSASTItem::PathSegment(ref s)   => Some(s.span),
             RSASTItem::Block(ref b)         => Some(b.span),
+            RSASTItem::Arm(ref a)           => Some(a.span),
         }
     }
 }

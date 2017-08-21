@@ -115,6 +115,7 @@ pub unsafe extern fn node_get_kind(node: *const RSNode) -> RSNodeKind {
         RSASTItem::Path(..) => RSNodeKind::Path,
         RSASTItem::PathSegment(..) => RSNodeKind::PathSegment,
         RSASTItem::Block(..) => RSNodeKind::Block,
+        RSASTItem::Arm(..) => RSNodeKind::Arm,
         _=> RSNodeKind::Unexposed
     }
 }
@@ -193,6 +194,7 @@ impl<'ast> ApiVisitor<'ast> {
                     &RSASTItem::Path(p) => visit::walk_path(self, p),
                     &RSASTItem::PathSegment(s) => visit::walk_path_segment(self, s),
                     &RSASTItem::Block(b) => visit::walk_block(self, b),
+                    &RSASTItem::Arm(a) => visit::walk_arm(self, a),
                 }
                 self.parents.pop().unwrap();
             }
@@ -239,5 +241,8 @@ impl<'ast> Visitor<'ast> for ApiVisitor<'ast> {
     }
     fn visit_block(&mut self, b: &'ast Block) {
         walk_node!(self, RSASTItem::Block(b));
+    }
+    fn visit_arm(&mut self, a: &'ast Arm) {
+        walk_node!(self, RSASTItem::Arm(a));
     }
 }
