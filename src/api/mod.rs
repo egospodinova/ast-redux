@@ -1,9 +1,11 @@
+mod diagnostics;
 mod types;
 
 use std::ptr;
 use std::ffi::{CStr, CString};
 
 use api::types::*;
+use api::diagnostics::*;
 use types::*;
 use visit::{self, Visitor};
 use parser::parse_source;
@@ -38,6 +40,35 @@ pub unsafe extern fn parse_crate(name: *mut ::libc::c_char, src: *mut ::libc::c_
     }
 
     ptr::null()
+}
+
+#[no_mangle]
+pub unsafe extern fn crate_get_diagnostics<'a>(krate: *const RSCrate) -> *mut RSDiagnosticIterator<'a> {
+    Box::into_raw(Box::new(RSDiagnosticIterator((*krate).get_diagnostics().iter())))
+}
+
+#[no_mangle]
+pub unsafe extern fn diagnostics_next<'a>(diagnostics: *mut RSDiagnosticIterator<'a>) -> *const RSDiagnostic<'a> {
+    if let Some(ref diagnostic) = (*diagnostics).0.next() {
+        Box::into_raw(Box::new(RSDiagnostic(diagnostic)))
+    } else {
+        ptr::null()
+    }
+}
+
+#[no_mangle]
+pub unsafe extern fn diagnostic_get_level(diagnostic: *const RSDiagnostic) -> RSDiagnosticLevel {
+    (*diagnostic).get_level()
+}
+
+#[no_mangle]
+pub unsafe extern fn diagnostic_get_message(diagnostic: *const RSDiagnostic) -> *const ::libc::c_char {
+    CString::new((*diagnostic).get_message()).unwrap().into_raw()
+}
+
+#[no_mangle]
+pub unsafe extern fn diagnostic_get_primary_range(diagnostic: *const RSDiagnostic) -> RSRange {
+    (*diagnostic).get_primary_range()
 }
 
 #[no_mangle]
@@ -131,6 +162,20 @@ pub unsafe extern fn destroy_crate(krate: *mut RSCrate) {
 pub unsafe extern fn destroy_node(node: *mut RSNode) {
     if !node.is_null() {
         let node = Box::from_raw(node);
+    }
+}
+
+#[no_mangle]
+pub unsafe extern fn destroy_diagnostic(diagnostic: *mut RSDiagnostic) {
+    if !diagnostic.is_null() {
+        let diagnostic = Box::from_raw(diagnostic);
+    }
+}
+
+#[no_mangle]
+pub unsafe extern fn destroy_diagnostic_iterator(diagnostics: *mut RSDiagnosticIterator) {
+    if !diagnostics.is_null() {
+        let diagnostics = Box::from_raw(diagnostics);
     }
 }
 

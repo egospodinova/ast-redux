@@ -198,5 +198,9 @@ impl RSCrate {
     pub fn get_ast(&self) -> &Option<types::Crate> {
         &self.ast
     }
+
+    pub fn get_diagnostics(&self) -> &Vec<Diagnostic> {
+        &self.diagnostics
+    }
 }
 
