@@ -16,8 +16,3 @@ pub struct Diagnostic {
     pub message: String,
 }
 
-impl Diagnostic {
-    pub fn primary_span(&self) -> &Span {
-        self.primary_spans.first().unwrap()
-    }
-}
