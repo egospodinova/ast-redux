@@ -72,9 +72,9 @@ pub fn parse_source(name: String, source: String) -> (Option<Crate>, Vec<Diagnos
     let transformer = Arc::new(Mutex::new(DiagnosticTransformer::new()));
     let parser_transformer_copy = transformer.clone();
     let krate = run_parser(move || -> Option<Crate> {
-        let emitter = Box::new(TransformingEmitter::new(parser_transformer_copy));
-
         let codemap = Rc::new(CodeMap::new(FilePathMapping::empty()));
+        let emitter = Box::new(TransformingEmitter::new(parser_transformer_copy, codemap.clone()));
+
         let handler = Handler::with_emitter(true, false, emitter);
         let parse_sess = ParseSess::with_span_handler(handler, codemap);
         let filemap = parse_sess.codemap().new_filemap(name, source);
