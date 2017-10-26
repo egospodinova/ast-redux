@@ -23,6 +23,19 @@ pub enum RSNodeKind {
 }
 
 #[repr(C)]
+pub enum RSTypeKind {
+    Never,
+    Tuple,
+    Array,
+    Slice,
+    Ptr,
+    Ref,
+    Function,
+    Path,
+    Err
+}
+
+#[repr(C)]
 pub enum RSVisitResult {
     Break,
     Continue,

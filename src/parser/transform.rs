@@ -373,7 +373,7 @@ impl<'a> ASTTransformer<'a> {
             ast::TyKind::BareFn(ref fn_ty)      => Type_::Fun(self.transform_fn_type(fn_ty)),
             ast::TyKind::Tup(ref tys)           => Type_::Tuple(vec_map!(tys, |typ| trans_ty!(typ))),
             ast::TyKind::Path(ref qs, ref p)    => Type_::Path(self.transform_path(p)),
-            ast::TyKind::TraitObject(ref bs)    => Type_::TraitObject(vec_map!(bs, |b| self.transform_bound(b))),
+            ast::TyKind::TraitObject(ref bs, _) => Type_::TraitObject(vec_map!(bs, |b| self.transform_bound(b))),
             ast::TyKind::ImplicitSelf | // ImplicitSelf needs to be inferred and there's no reason to do it here
             ast::TyKind::Infer                  => Type_::Var(self.next_type_var()),
             ast::TyKind::Mac(ref mac)           => Type_::Macro(self.transform_macro(mac)),
@@ -537,8 +537,8 @@ impl<'a> ASTTransformer<'a> {
 
     fn transform_range_end(&mut self, limits: &ast::RangeEnd) -> RangeLimits {
         match *limits {
-            ast::RangeEnd::Excluded => RangeLimits::HalfOpen,
-            ast::RangeEnd::Included => RangeLimits::Closed
+            ast::RangeEnd::Excluded     => RangeLimits::HalfOpen,
+            ast::RangeEnd::Included(_)  => RangeLimits::Closed
         }
     }
 
@@ -644,8 +644,8 @@ impl<'a> ASTTransformer<'a> {
     }
 
     fn transform_span(&mut self, span: &codemap::Span) -> Span {
-        let lo = self.codemap.lookup_char_pos(span.lo);
-        let hi = self.codemap.lookup_char_pos(span.hi);
+        let lo = self.codemap.lookup_char_pos(span.lo());
+        let hi = self.codemap.lookup_char_pos(span.hi());
         Span {
             start: self.transform_loc(&lo),
             end: self.transform_loc(&hi)

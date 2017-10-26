@@ -64,8 +64,8 @@ impl TransformingEmitter {
 
     // Copied from transform.rs; probably possible to remove duplication
     fn transform_span(&mut self, span: &codemap::Span) -> Span {
-        let lo = self.codemap.lookup_char_pos(span.lo);
-        let hi = self.codemap.lookup_char_pos(span.hi);
+        let lo = self.codemap.lookup_char_pos(span.lo());
+        let hi = self.codemap.lookup_char_pos(span.hi());
         Span {
             start: self.transform_loc(&lo),
             end: self.transform_loc(&hi)
